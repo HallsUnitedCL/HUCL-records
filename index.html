@@ -90,16 +90,6 @@
       padding: 10px;
       text-align: center;
     }
-    th {
-      color: #fff;
-      font-weight: 700;
-      cursor: pointer;
-      position: relative;
-    }
-    th .sort-btn {
-      font-size: 0.8em;
-      margin-left: 5px;
-    }
     tbody tr:nth-child(even) {
       background-color: rgba(249,249,249,0.8);
     }
@@ -155,10 +145,9 @@
       transform: translate(-50%, -50%);
       width: 280px;
       height: 420px;
-      /* Use contain so the entire background image shows */
       background: url('https://i.imgur.com/K0zYkQeb.jpg') no-repeat center center;
-      background-size: contain;
-      border-radius: 0; /* Remove rounded corners so the full image is visible */
+      background-size: cover;
+      /* No border radius so the full image is shown */
       box-shadow: 0 6px 12px rgba(0,0,0,0.3);
       display: flex;
       flex-direction: column;
@@ -166,7 +155,7 @@
       z-index: 10000;
       opacity: 1;
     }
-    /* Split card into upper and lower halves */
+    /* Leader card inner layout: top half for image, bottom half for info */
     .leader-card .leader-image {
       flex: 2;
       width: 100%;
@@ -175,10 +164,15 @@
       align-items: center;
       padding: 10px;
     }
+    .leader-card .leader-image img {
+      width: 80%;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
     .leader-card .leader-info {
       flex: 1;
       width: 100%;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.75);
       padding: 10px;
       text-align: center;
     }
@@ -193,52 +187,23 @@
       font-size: 1.1em;
       color: #fff;
     }
-    /* Spotlight overlay for leader card (darker) */
+    /* Dark spotlight overlay */
     .spotlight-overlay {
       position: fixed;
       top: 0; left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.9);
       z-index: 9998;
       pointer-events: none;
     }
-    /* ANIMATIONS */
+    /* Leader card animation */
     @keyframes flipAndFade {
       0% { transform: translate(-50%, -50%) rotateY(0deg); opacity: 1; }
       100% { transform: translate(-50%, -50%) rotateY(360deg); opacity: 0; }
     }
     .leader-card.animate {
       animation: flipAndFade 1.5s forwards;
-    }
-    /* BAT/ BALL/ STUMPS EMOJI ANIMATIONS (Bigger and in front) */
-    .bat-animation, .ball-animation, .stumps-animation {
-      position: absolute;
-      z-index: 11000;
-      font-size: 6em;
-    }
-    .bat-animation { left: 5%; top: 50%; }
-    .ball-animation { right: 5%; top: 50%; }
-    @keyframes swingBat {
-      0% { transform: translateX(0) rotate(0deg); opacity: 1; }
-      50% { transform: translateX(80px) rotate(30deg); }
-      100% { transform: translateX(160px) rotate(60deg); opacity: 0; }
-    }
-    @keyframes moveBall {
-      0% { transform: translateX(0) rotate(0deg); opacity: 1; }
-      50% { transform: translateX(-80px) rotate(-30deg); }
-      100% { transform: translateX(-160px) rotate(-60deg); opacity: 0; }
-    }
-    @keyframes moveCricketBall {
-      0% { transform: translateX(0); opacity: 1; }
-      50% { transform: translateX(80px); }
-      100% { transform: translateX(160px); opacity: 0; }
-    }
-    @keyframes shakeStumps {
-      0% { transform: rotate(0deg); }
-      30% { transform: rotate(10deg); }
-      60% { transform: rotate(-10deg); }
-      100% { transform: rotate(0deg); }
     }
   </style>
 </head>
@@ -316,7 +281,7 @@
 
     let currentWeekType = "lastWeek"; // "lastWeek", "thisWeek", or "total"
     let currentCategory = "batting";  // "batting", "bowling", "mvp"
-    let currentTableData = []; // Global store for sort functionality
+    let currentTableData = []; // Global store for the leader card record
 
     /* Mapping of player names to image URLs */
     const playerImages = {
@@ -415,60 +380,9 @@
       };
     }
 
-    /* SORTING FUNCTIONS */
-    function sortBatting(data) {
-      return data.sort((a, b) => parseFloat(b["Runs"] || 0) - parseFloat(a["Runs"] || 0));
-    }
-    function sortBowling(data) {
-      const key = data[0].hasOwnProperty("Wickets") ? "Wickets" : "wickets";
-      return data.sort((a, b) => parseFloat(b[key] || 0) - parseFloat(a[key] || 0));
-    }
-    function sortMVP(data) {
-      return data.sort((a, b) => parseFloat(b["MVP Points"] || 0) - parseFloat(a["MVP Points"] || 0));
-    }
+    /* REMOVED SORT FUNCTIONS (sorting has been removed) */
 
-    /* ATTACH SORT LISTENERS (Now resets other columns) */
-    function attachSortListeners() {
-      document.querySelectorAll("th.sortable").forEach(th => {
-        th.addEventListener("click", function() {
-          let col = th.getAttribute("data-column");
-          // Reset sort direction for other columns
-          document.querySelectorAll("th.sortable span.sort-btn").forEach(s => {
-            if(s.parentElement.getAttribute("data-column") !== col) {
-              s.setAttribute("data-direction", "none");
-            }
-          });
-          let sortBtn = th.querySelector("span.sort-btn");
-          let direction = sortBtn.getAttribute("data-direction");
-          if(direction === "none" || direction === "desc") {
-            direction = "asc";
-          } else {
-            direction = "desc";
-          }
-          sortBtn.setAttribute("data-direction", direction);
-          currentTableData.sort((a, b) => {
-            let aVal = a[col] || "";
-            let bVal = b[col] || "";
-            if(!isNaN(aVal) && !isNaN(bVal)){
-              aVal = parseFloat(aVal);
-              bVal = parseFloat(bVal);
-            }
-            if(aVal < bVal) return direction === "asc" ? -1 : 1;
-            if(aVal > bVal) return direction === "asc" ? 1 : -1;
-            return 0;
-          });
-          if(currentCategory === "batting") {
-            renderBattingTable(currentTableData);
-          } else if(currentCategory === "bowling") {
-            renderBowlingTable(currentTableData);
-          } else if(currentCategory === "mvp") {
-            renderMVPTable(currentTableData);
-          }
-        });
-      });
-    }
-
-    /* ANIMATION & CONFETTI FUNCTIONS */
+    /* ANIMATION & CONFETTI FUNCTION */
     function doConfetti() {
       const duration = 2000;
       const animationEnd = Date.now() + duration;
@@ -481,102 +395,54 @@
       }, 250);
     }
 
-    /* BAT/ BALL ANIMATION USING EMOJIS (for batting) */
-    function batHitBallAnimation() {
-      return new Promise((resolve) => {
-        const batDiv = document.createElement("div");
-        batDiv.className = "bat-animation";
-        batDiv.innerHTML = "🏏";
-        document.body.appendChild(batDiv);
-        const ballDiv = document.createElement("div");
-        ballDiv.className = "ball-animation";
-        ballDiv.innerHTML = "⚾";
-        document.body.appendChild(ballDiv);
-        batDiv.style.animation = "swingBat 2s forwards";
-        ballDiv.style.animation = "moveBall 2s forwards";
-        setTimeout(() => {
-          batDiv.remove();
-          ballDiv.remove();
-          resolve();
-        }, 2000);
-      });
-    }
-    /* STUMPS/ BALL ANIMATION USING EMOJIS (for bowling) */
-    function ballHitStumpsAnimation() {
-      return new Promise((resolve) => {
-        const ballDiv = document.createElement("div");
-        ballDiv.className = "ball-animation";
-        ballDiv.innerHTML = "⚾";
-        document.body.appendChild(ballDiv);
-        const stumpsDiv = document.createElement("div");
-        stumpsDiv.className = "stumps-animation";
-        stumpsDiv.innerHTML = "🪓"; // Use an emoji to indicate impact; adjust as desired.
-        document.body.appendChild(stumpsDiv);
-        ballDiv.style.animation = "moveCricketBall 2s forwards";
-        setTimeout(() => {
-          stumpsDiv.style.animation = "shakeStumps 0.5s";
-        }, 1000);
-        setTimeout(() => {
-          ballDiv.remove();
-          stumpsDiv.remove();
-          resolve();
-        }, 2000);
-      });
-    }
-
-    /* EAFC-STYLE LEADER CARD WITH SPOTLIGHT & STATS */
+    /* Show Leader Card without pre-animation */
     function showLeaderCard(leaderName, category) {
-      let animPromise;
-      if(category === "batting") {
-        animPromise = batHitBallAnimation();
-      } else if(category === "bowling") {
-        animPromise = ballHitStumpsAnimation();
-      } else {
-        animPromise = Promise.resolve();
+      doConfetti();
+      // Create dark spotlight overlay
+      const spotlight = document.createElement("div");
+      spotlight.className = "spotlight-overlay";
+      document.body.appendChild(spotlight);
+      
+      // Find the leader's record from currentTableData
+      let record = currentTableData.find(r => 
+        (r["Batsman"] === leaderName) || (r["Bowler"] === leaderName) || (r["Name"] === leaderName)
+      );
+      // Exclude keys used for identification
+      let statKeys = record ? Object.keys(record).filter(k => !["Batsman", "Bowler", "Name"].includes(k)) : [];
+      // Shuffle and pick up to 4 stats
+      let statsHTML = "";
+      if(record && statKeys.length > 0) {
+        statKeys.sort(() => 0.5 - Math.random());
+        let picked = statKeys.slice(0, 4);
+        picked.forEach(key => {
+          statsHTML += `<p>${key}: ${record[key]}</p>`;
+        });
       }
-      animPromise.then(() => {
-        doConfetti();
-        // Create darker spotlight overlay
-        const spotlight = document.createElement("div");
-        spotlight.className = "spotlight-overlay";
-        document.body.appendChild(spotlight);
-        const imageUrl = playerImages[leaderName] || "https://i.imgur.com/0ut0Pbl.png";
-        // Attempt to find the leader's record from currentTableData for stats
-        let statsHTML = "";
-        if(currentTableData && currentTableData.length > 0) {
-          let record;
-          if(category === "batting") {
-            record = currentTableData.find(r => r["Batsman"] === leaderName);
-            if(record) { statsHTML = `<p>Runs: ${record["Runs"]} | SR: ${record["Strike Rate"]}</p>`; }
-          } else if(category === "bowling") {
-            record = currentTableData.find(r => (r["Bowler"] === leaderName) || (r["bowler"] === leaderName));
-            if(record) { statsHTML = `<p>Wickets: ${record["Wickets"] || "N/A"} | Econ: ${record["Economy"] || "N/A"}</p>`; }
-          } else if(category === "mvp") {
-            record = currentTableData.find(r => r["Name"] === leaderName);
-            if(record) { statsHTML = `<p>Catches: ${record["Catches"]} | Points: ${record["MVP Points"]}</p>`; }
-          }
-        }
-        const card = document.createElement("div");
-        card.className = "leader-card";
-        card.innerHTML = `
-          <div class="leader-image">
-            <img class="leader-face" src="${imageUrl}" alt="${leaderName}">
-          </div>
-          <div class="leader-info">
-            <h3>${leaderName}</h3>
-            ${statsHTML}
-          </div>
-        `;
-        document.body.appendChild(card);
-        setTimeout(() => { card.classList.add("animate"); }, 2000);
-        setTimeout(() => {
-          card.remove();
-          spotlight.remove();
-        }, 3500);
-      });
+      
+      // Build leader card with a FIFA card–like design
+      const imageUrl = playerImages[leaderName] || "https://i.imgur.com/0ut0Pbl.png";
+      const card = document.createElement("div");
+      card.className = "leader-card";
+      card.innerHTML = `
+        <div class="leader-image">
+          <img class="leader-face" src="${imageUrl}" alt="${leaderName}">
+        </div>
+        <div class="leader-info">
+          <h3>${leaderName}</h3>
+          ${statsHTML}
+        </div>
+      `;
+      document.body.appendChild(card);
+      
+      // After 2 seconds, animate the card (flip & fade) and then remove card and spotlight
+      setTimeout(() => { card.classList.add("animate"); }, 2000);
+      setTimeout(() => {
+        card.remove();
+        spotlight.remove();
+      }, 3500);
     }
 
-    /* RENDERING TABLES WITH SORT BUTTONS */
+    /* RENDERING TABLES (No sort functionality) */
     function renderBattingTable(data) {
       currentTableData = data;
       if(data.length === 0) {
@@ -586,7 +452,7 @@
       const headers = Object.keys(data[0]).filter(key => key.trim() !== "");
       let html = `<table><thead><tr>`;
       headers.forEach(header => {
-        html += `<th class="sortable" data-column="${header}">${header} <span class="sort-btn" data-direction="none">&#x21C5;</span></th>`;
+        html += `<th>${header}</th>`;
       });
       html += `</tr></thead><tbody>`;
       data.forEach((row, index) => {
@@ -603,7 +469,6 @@
       });
       html += `</tbody></table>`;
       document.getElementById("tableContainer").innerHTML = html;
-      attachSortListeners();
     }
 
     function renderBowlingTable(data) {
@@ -615,7 +480,7 @@
       const headers = Object.keys(data[0]).filter(key => key.trim() !== "");
       let html = `<table><thead><tr>`;
       headers.forEach(header => {
-        html += `<th class="sortable" data-column="${header}">${header} <span class="sort-btn" data-direction="none">&#x21C5;</span></th>`;
+        html += `<th>${header}</th>`;
       });
       html += `</tr></thead><tbody>`;
       data.forEach((row, index) => {
@@ -632,7 +497,6 @@
       });
       html += `</tbody></table>`;
       document.getElementById("tableContainer").innerHTML = html;
-      attachSortListeners();
     }
 
     function renderMVPTable(data) {
@@ -644,7 +508,7 @@
       const headers = Object.keys(data[0]).filter(key => key.trim() !== "");
       let html = `<table><thead><tr>`;
       headers.forEach(header => {
-        html += `<th class="sortable" data-column="${header}">${header} <span class="sort-btn" data-direction="none">&#x21C5;</span></th>`;
+        html += `<th>${header}</th>`;
       });
       html += `</tr></thead><tbody>`;
       data.forEach((row) => {
@@ -656,7 +520,6 @@
       });
       html += `</tbody></table>`;
       document.getElementById("tableContainer").innerHTML = html;
-      attachSortListeners();
     }
 
     /* LOAD WEEKLY DATA FROM FIREBASE */
@@ -844,19 +707,17 @@
        - "Last Week's Records" or "This Week's Records" triggers loadWeeklyData.
        - "Total" triggers loadTotalData.
     2) Categories: "batting", "bowling", "mvp".
-    3) Animations:
-       - Batting: Uses larger bat and ball emojis (6em) in a swing animation, then confetti and a leader card.
-       - Bowling: Uses a larger ball emoji moving toward stumps with an impact emoji then stumps shake.
-       - MVP: Simply confetti + leader card.
-    4) Leader Card:
-       - EAFC‑style, bigger card showing player's image (upper half) and, in the lower half, the player's name and some stats.
-       - A spotlight overlay darkens the background when the card appears.
-       - The card flips/fades after 2s and is removed at 3.5s.
-    5) Tables:
-       - Semi‑transparent background lets the stadium show through.
-       - Top 3 rows pop out with increased scale and shadow.
-       - "Runs" (batting) and "Wickets" (bowling) columns use a highlighted font.
-       - Each header is sortable via a click on the sort icon (toggling ascending/descending).
+    3) Leader Card:
+       - When a leader is determined, a dark spotlight overlay appears.
+       - A FIFA card–style leader card is then displayed with the full background image.
+       - Inside the card, the upper half shows a small player photo (from playerImages).
+       - The lower half shows the player's name in bold and 4 random stats (picked from the leader's record).
+       - After 2 seconds the card flips/fades and is removed along with the spotlight.
+    4) Tables:
+       - Semi-transparent background lets the stadium show through.
+       - Top 3 rows pop out with an increased scale and more prominent shadow.
+       - "Runs" (batting) and "Wickets" (bowling) columns are highlighted.
+       - Sorting functionality has been removed.
   -->
 </body>
 </html>
