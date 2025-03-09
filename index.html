@@ -2,26 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Halls United Cricket League HUCL</title>
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <!-- SheetJS for Excel parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+  <!-- Confetti library (canvas-confetti) -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
   <style>
-    /* Overall Body & Background */
+    /* BODY & BACKGROUND */
     body {
-      font-family: 'Roboto', Arial, sans-serif;
+      font-family: 'Roboto', sans-serif;
       background: url('https://documents.bcci.tv/resizedimageskirti/Greenfield_International_Stadium_compressed.jpg') no-repeat center center fixed;
       background-size: cover;
       color: #fff;
       margin: 0;
       padding: 0;
+      overflow-x: hidden; /* Hide horizontal scroll if animations go off-screen */
     }
-    /* Header Styling */
+
+    /* HEADER */
     header {
       background-color: rgba(0, 0, 0, 0.7);
       padding: 20px;
@@ -33,7 +38,8 @@
       font-size: 2.5em;
       color: #ffd700;
     }
-    /* Navigation Buttons */
+
+    /* NAVIGATION */
     .nav-main, .nav-sub {
       text-align: center;
       margin: 15px 0;
@@ -57,7 +63,8 @@
       background-color: #ffd700;
       color: #000;
     }
-    /* Content Area */
+
+    /* CONTENT CONTAINER */
     .content {
       width: 95%;
       max-width: 1200px;
@@ -69,14 +76,18 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       position: relative;
     }
-    /* Table Styling */
+
+    /* TABLES (IPL STYLE INSPIRED) */
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 15px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       border-radius: 5px;
       overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    thead {
+      background: linear-gradient(to right, #ff4500, #ff7f50);
     }
     th, td {
       border: 1px solid #ddd;
@@ -84,8 +95,8 @@
       text-align: center;
     }
     th {
-      background-color: #ff4500;
       color: #fff;
+      font-weight: 700;
     }
     tbody tr:nth-child(even) {
       background-color: #f9f9f9;
@@ -96,7 +107,18 @@
     tbody tr:hover {
       background-color: #ffe5d9;
     }
-    /* Admin Section */
+    /* Highlight top 3 rows */
+    tbody tr:nth-child(1) {
+      background-color: #ffd700 !important; /* Gold for 1st place */
+    }
+    tbody tr:nth-child(2) {
+      background-color: #c0c0c0 !important; /* Silver for 2nd place */
+    }
+    tbody tr:nth-child(3) {
+      background-color: #cd7f32 !important; /* Bronze for 3rd place */
+    }
+
+    /* ADMIN SECTION */
     .admin-section {
       background-color: rgba(0, 0, 0, 0.7);
       color: #fff;
@@ -112,34 +134,47 @@
     .hidden {
       display: none;
     }
-    /* Cap Icon Styling */
-    img {
+
+    /* CAP ICONS */
+    img.cap-icon {
       width: 20px;
       vertical-align: middle;
     }
-    /* Leader Card Styles */
+
+    /* EAFC-STYLE PLAYER CARD (BIGGER) */
     .leader-card {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 200px;
-      background-color: #fff;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      width: 280px; /* bigger card */
+      height: 420px; /* approximate FUT card ratio */
+      background: url('https://i.imgur.com/a0ZRWDa.jpeg') no-repeat center center; /* Example TOT-style background */
+      background-size: cover;
+      border-radius: 20px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
       text-align: center;
       padding: 10px;
       z-index: 9999;
       opacity: 1;
-    }
-    .leader-card img {
-      width: 100%;
-      border-radius: 10px 10px 0 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
     }
     .leader-card h3 {
-      margin: 5px 0;
-      color: #333;
+      margin: 0;
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.3em;
     }
+    .leader-card img.leader-face {
+      width: 70%;
+      margin: 0 auto;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* ANIMATIONS */
     @keyframes flipAndFade {
       0% {
         transform: translate(-50%, -50%) rotateY(0deg);
@@ -151,7 +186,49 @@
       }
     }
     .leader-card.animate {
-      animation: flipAndFade 2s forwards;
+      animation: flipAndFade 1.5s forwards;
+    }
+
+    /* BAT / BALL ANIMATION (FOR BATTING) */
+    .bat-animation, .ball-animation {
+      position: absolute;
+      z-index: 9999;
+      top: 70%; /* adjust as needed */
+    }
+    .bat-animation img, .ball-animation img {
+      width: 80px;
+    }
+    @keyframes swingBat {
+      0%   { transform: rotate(0deg) translateX(-200px); opacity: 1; }
+      50%  { transform: rotate(60deg) translateX(50px); }
+      100% { transform: rotate(120deg) translateX(200px); opacity: 0; }
+    }
+    @keyframes moveBall {
+      0%   { transform: translateX(200px); opacity: 1; }
+      50%  { transform: translateX(-20px); }
+      100% { transform: translateX(-300px); opacity: 0; }
+    }
+
+    /* STUMPS / BALL ANIMATION (FOR BOWLING) */
+    .stumps-animation {
+      position: absolute;
+      z-index: 9999;
+      top: 70%;
+      right: 10%;
+    }
+    .stumps-animation img {
+      width: 80px;
+    }
+    @keyframes moveCricketBall {
+      0%   { transform: translateX(-300px); opacity: 1; }
+      50%  { transform: translateX(0px); }
+      100% { transform: translateX(200px); opacity: 0; }
+    }
+    @keyframes shakeStumps {
+      0%   { transform: rotate(0deg); }
+      30%  { transform: rotate(10deg); }
+      60%  { transform: rotate(-10deg); }
+      100% { transform: rotate(0deg); }
     }
   </style>
 </head>
@@ -211,9 +288,9 @@
   </div>
   
   <script>
-    // Firebase configuration – REPLACE with your project details if needed.
+    // Firebase config (REPLACE if needed)
     const firebaseConfig = {
-      apiKey: "AIzaSyBDfZW5VH_uWNGY0Krsy9wQt5mcHXgLMgY",
+      apiKey: "AIzaSyBDfZW...",
       authDomain: "hallscl.firebaseapp.com",
       databaseURL: "https://hallscl-default-rtdb.europe-west1.firebasedatabase.app/",
       projectId: "hallscl",
@@ -221,42 +298,26 @@
       messagingSenderId: "176761403936",
       appId: "1:176761403936:web:c9c36c7ca955fa896c9a45"
     };
-    
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
       console.log("✅ Firebase connected successfully!");
     }
     const db = firebase.database();
-    
-    let currentWeekType = "lastWeek"; // "lastWeek", "thisWeek", or "total"
-    let currentCategory = "batting"; // "batting", "bowling", "mvp"
-    
-    // Mapping of player names to image URLs for the leader card.
+
+    let currentWeekType = "lastWeek"; // "lastWeek", "thisWeek", "total"
+    let currentCategory = "batting";  // "batting", "bowling", "mvp"
+
+    /* Mapping of player names to image URLs for bigger leader card */
     const playerImages = {
-      "Tavnoor": "https://example.com/tavnoor.png",
-      "Karan": "https://i.imgur.com/ODDmYHQ.jpeg",
-      // Add more mappings as needed.
+      "Tavnoor": "https://i.imgur.com/ODDmYHQ.jpeg", // example
+      "Karan": "https://i.imgur.com/someOtherImage.jpg",
+      // etc.
     };
-    
-    // Function to show the leader card overlay.
-    function showLeaderCard(leaderName, category) {
-      const imageUrl = playerImages[leaderName] || "https://example.com/default.png";
-      const card = document.createElement("div");
-      card.className = "leader-card";
-      card.innerHTML = `<img src="${imageUrl}" alt="${leaderName}"><h3>${leaderName}</h3>`;
-      document.body.appendChild(card);
-      // Wait 2 seconds then start animation.
-      setTimeout(() => { card.classList.add("animate"); }, 2000);
-      // Remove the card after 4 seconds total.
-      setTimeout(() => { if (card.parentNode) { card.parentNode.removeChild(card); } }, 4000);
-    }
-    
-    // Toggle Admin Login display.
+
+    /* ADMIN LOGIN */
     function toggleAdminLogin() {
       document.getElementById("adminLogin").classList.toggle("hidden");
     }
-    
-    // Check admin password.
     function checkPassword() {
       const pass = document.getElementById("adminPass").value;
       if (pass === "cricket123") {
@@ -267,8 +328,8 @@
         alert("Incorrect password");
       }
     }
-    
-    // Main view navigation: lastWeek, thisWeek, total.
+
+    /* NAVIGATION */
     function showMainView(weekType) {
       currentWeekType = weekType;
       document.getElementById("btnLast").classList.toggle("active", weekType==="lastWeek");
@@ -276,8 +337,6 @@
       document.getElementById("btnTotal").classList.toggle("active", weekType==="total");
       showCategory(currentCategory);
     }
-    
-    // Sub category navigation: batting, bowling, mvp.
     function showCategory(category) {
       currentCategory = category;
       document.getElementById("btnBatting").classList.toggle("active", category==="batting");
@@ -290,8 +349,8 @@
         loadWeeklyData(currentWeekType, category);
       }
     }
-    
-    // CSV parser (handles BOM, delimiters, extra spaces)
+
+    /* CSV PARSER */
     function parseCSV(csvText) {
       csvText = csvText.replace(/^\uFEFF/, '');
       let delimiter = csvText.indexOf("\t") > -1 ? "\t" : ",";
@@ -301,14 +360,12 @@
         delimiter = "\t";
         headers = lines[0].split(delimiter).map(h => h.trim());
       }
-      console.log("Detected delimiter:", delimiter, "Headers:", headers);
       const data = [];
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
         const cols = line.split(delimiter).map(c => c.trim());
         if (cols.length < headers.length) {
-          console.warn(`Skipping row ${i}:`, line);
           continue;
         }
         let row = {};
@@ -317,11 +374,10 @@
         });
         data.push(row);
       }
-      console.log("Parsed data:", data);
       return data;
     }
-    
-    // Helper functions for overs conversion (bowling)
+
+    /* OVERS CONVERSION (BOWLING) */
     function oversToBalls(oversStr) {
       if(oversStr.indexOf('.') === -1) {
         return parseInt(oversStr) * 6;
@@ -331,14 +387,13 @@
       const balls = parseInt(parts[1]);
       return overs * 6 + balls;
     }
-    
     function ballsToOvers(balls) {
       const overs = Math.floor(balls / 6);
       const rem = balls % 6;
       return overs + "." + rem;
     }
-    
-    // Helper: Transform batting row to normalized keys.
+
+    /* BATTING KEY NORMALIZATION */
     function transformBattingData(row) {
       return {
         "Batsman": row["Batsmen"] || row["Batsman"] || "",
@@ -354,21 +409,142 @@
         "50/100": row["50/100s"] || row["50/100"] || ""
       };
     }
-    
-    // Sorting functions
+
+    /* SORTING */
     function sortBatting(data) {
       return data.sort((a, b) => parseFloat(b["Runs"] || 0) - parseFloat(a["Runs"] || 0));
     }
     function sortBowling(data) {
-      // Use key "Wickets" or "wickets" (case-insensitive)
       const key = data[0].hasOwnProperty("Wickets") ? "Wickets" : "wickets";
       return data.sort((a, b) => parseFloat(b[key] || 0) - parseFloat(a[key] || 0));
     }
     function sortMVP(data) {
       return data.sort((a, b) => parseFloat(b["MVP Points"] || 0) - parseFloat(a["MVP Points"] || 0));
     }
-    
-    // Dynamic table rendering functions with cap icons
+
+    /* ANIMATIONS & CONFETTI */
+    function doConfetti() {
+      const duration = 2000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+      function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+        const particleCount = 50 * (timeLeft / duration);
+        // since particles fall down, start a bit higher than random
+        confetti(Object.assign({}, defaults, {
+          particleCount,
+          origin: { x: randomInRange(0.1, 0.9), y: Math.random() - 0.2 }
+        }));
+      }, 250);
+    }
+
+    function batHitBallAnimation() {
+      return new Promise((resolve) => {
+        // Create bat & ball elements
+        const batDiv = document.createElement("div");
+        batDiv.className = "bat-animation";
+        batDiv.style.left = "10%";
+        batDiv.innerHTML = `<img src="https://i.imgur.com/1Z6dxNK.png" alt="Bat" />`;
+        document.body.appendChild(batDiv);
+
+        const ballDiv = document.createElement("div");
+        ballDiv.className = "ball-animation";
+        ballDiv.style.right = "10%";
+        ballDiv.innerHTML = `<img src="https://i.imgur.com/EQ3O2Rz.png" alt="Ball" />`;
+        document.body.appendChild(ballDiv);
+
+        // Animate via CSS
+        batDiv.style.animation = "swingBat 2s forwards";
+        ballDiv.style.animation = "moveBall 2s forwards";
+
+        // Cleanup after 2s
+        setTimeout(() => {
+          if (batDiv.parentNode) batDiv.parentNode.removeChild(batDiv);
+          if (ballDiv.parentNode) ballDiv.parentNode.removeChild(ballDiv);
+          resolve();
+        }, 2000);
+      });
+    }
+
+    function ballHitStumpsAnimation() {
+      return new Promise((resolve) => {
+        // Create stumps & ball
+        const stumpsDiv = document.createElement("div");
+        stumpsDiv.className = "stumps-animation";
+        stumpsDiv.innerHTML = `<img id="stumps" src="https://i.imgur.com/3nITwB9.png" alt="Stumps" />`;
+        document.body.appendChild(stumpsDiv);
+
+        const ballDiv = document.createElement("div");
+        ballDiv.className = "ball-animation";
+        ballDiv.style.left = "10%";
+        ballDiv.innerHTML = `<img src="https://i.imgur.com/EQ3O2Rz.png" alt="Ball" />`;
+        document.body.appendChild(ballDiv);
+
+        // Animate the ball & then stumps shake
+        ballDiv.style.animation = "moveCricketBall 2s forwards";
+
+        setTimeout(() => {
+          const stumpsImg = document.getElementById("stumps");
+          if (stumpsImg) {
+            stumpsImg.style.animation = "shakeStumps 0.5s";
+          }
+        }, 1000);
+
+        // Cleanup
+        setTimeout(() => {
+          if (stumpsDiv.parentNode) stumpsDiv.parentNode.removeChild(stumpsDiv);
+          if (ballDiv.parentNode) ballDiv.parentNode.removeChild(ballDiv);
+          resolve();
+        }, 2000);
+      });
+    }
+
+    /* EAFC-STYLE LEADER CARD */
+    function showLeaderCard(leaderName, category) {
+      // Decide which animation to run (batting vs bowling vs mvp)
+      let animPromise;
+      if(category === "batting") {
+        animPromise = batHitBallAnimation();
+      } else if(category === "bowling") {
+        animPromise = ballHitStumpsAnimation();
+      } else {
+        // MVP or other category: no special animation, just immediate resolve
+        animPromise = Promise.resolve();
+      }
+
+      animPromise.then(() => {
+        doConfetti();
+        // Create the bigger EAFC-style card
+        const imageUrl = playerImages[leaderName] || "https://i.imgur.com/0ut0Pbl.png"; // fallback
+        const card = document.createElement("div");
+        card.className = "leader-card";
+        card.innerHTML = `
+          <img class="leader-face" src="${imageUrl}" alt="${leaderName}">
+          <h3>${leaderName}</h3>
+        `;
+        document.body.appendChild(card);
+
+        // Flip & fade after 2 seconds
+        setTimeout(() => {
+          card.classList.add("animate");
+        }, 2000);
+
+        // Remove the card after 3.5s
+        setTimeout(() => {
+          if(card.parentNode) card.parentNode.removeChild(card);
+        }, 3500);
+      });
+    }
+
+    /* RENDERING TABLES (with cap icons) */
     function renderBattingTable(data) {
       if (data.length === 0) {
         document.getElementById("tableContainer").innerHTML = "<p>No records available</p>";
@@ -381,14 +557,13 @@
       headers.forEach(header => {
         html += `<th>${header}</th>`;
       });
-      html += `</tr>
-        </thead>
-        <tbody>`;
+      html += `</tr></thead><tbody>`;
       data.forEach((row, index) => {
         html += `<tr>`;
         headers.forEach(header => {
+          // top row gets orange cap icon
           if(header.toLowerCase() === "batsman" && index === 0) {
-            html += `<td>${row[header]} <img src="https://t4.ftcdn.net/jpg/00/65/47/97/240_F_65479706_Q435JgT6L5lRI9DZdSW0xcipgCuXZAFp.jpg" alt="Orange Cap" style="width:20px;vertical-align:middle;"></td>`;
+            html += `<td>${row[header]} <img class="cap-icon" src="https://t4.ftcdn.net/jpg/00/65/47/97/240_F_65479706_Q435JgT6L5lRI9DZdSW0xcipgCuXZAFp.jpg" alt="Orange Cap"></td>`;
           } else {
             html += `<td>${row[header]}</td>`;
           }
@@ -398,7 +573,7 @@
       html += `</tbody></table>`;
       document.getElementById("tableContainer").innerHTML = html;
     }
-    
+
     function renderBowlingTable(data) {
       if (data.length === 0) {
         document.getElementById("tableContainer").innerHTML = "<p>No records available</p>";
@@ -411,14 +586,13 @@
       headers.forEach(header => {
         html += `<th>${header}</th>`;
       });
-      html += `</tr>
-        </thead>
-        <tbody>`;
+      html += `</tr></thead><tbody>`;
       data.forEach((row, index) => {
         html += `<tr>`;
         headers.forEach(header => {
+          // top row gets purple cap icon
           if(header.toLowerCase() === "bowler" && index === 0) {
-            html += `<td>${row[header]} <img src="https://t4.ftcdn.net/jpg/12/43/50/17/240_F_1243501749_mKioxoFNY6Wo0vCkNECAXWb5fpk7PKK5.jpg" alt="Purple Cap" style="width:20px;vertical-align:middle;"></td>`;
+            html += `<td>${row[header]} <img class="cap-icon" src="https://t4.ftcdn.net/jpg/12/43/50/17/240_F_1243501749_mKioxoFNY6Wo0vCkNECAXWb5fpk7PKK5.jpg" alt="Purple Cap"></td>`;
           } else {
             html += `<td>${row[header]}</td>`;
           }
@@ -428,7 +602,7 @@
       html += `</tbody></table>`;
       document.getElementById("tableContainer").innerHTML = html;
     }
-    
+
     function renderMVPTable(data) {
       if (data.length === 0) {
         document.getElementById("tableContainer").innerHTML = "<p>No records available</p>";
@@ -441,10 +615,8 @@
       headers.forEach(header => {
         html += `<th>${header}</th>`;
       });
-      html += `</tr>
-        </thead>
-        <tbody>`;
-      data.forEach(row => {
+      html += `</tr></thead><tbody>`;
+      data.forEach((row, index) => {
         html += `<tr>`;
         headers.forEach(header => {
           html += `<td>${row[header]}</td>`;
@@ -454,8 +626,8 @@
       html += `</tbody></table>`;
       document.getElementById("tableContainer").innerHTML = html;
     }
-    
-    // Load weekly data from Firebase for a given category (batting, bowling, mvp)
+
+    /* LOAD WEEKLY DATA */
     function loadWeeklyData(weekType, category) {
       db.ref("records/" + weekType + "/" + category).once("value", snapshot => {
         if(snapshot.exists()){
@@ -482,12 +654,12 @@
             renderMVPTable(data);
           }
         } else {
-          document.getElementById("tableContainer").innerHTML = "<p>No records found for " + weekType + " (" + category + ")</p>";
+          document.getElementById("tableContainer").innerHTML = `<p>No records found for ${weekType} (${category})</p>`;
         }
       });
     }
-    
-    // Load and aggregate all weeks’ data for Total view
+
+    /* LOAD TOTAL DATA */
     function loadTotalData(category) {
       db.ref("records/allWeeks").once("value", snapshot => {
         if(snapshot.exists()){
@@ -528,16 +700,19 @@
             const result = [];
             Object.keys(aggregated).forEach(name => {
               const rec = aggregated[name];
-              rec["Strike Rate"] = rec["Balls Faced"] > 0 ? (rec["Runs"] / rec["Balls Faced"] * 100).toFixed(2) : "0";
-              rec["Batting Average"] = rec["Dismissals"] > 0 ? (rec["Runs"] / rec["Dismissals"]).toFixed(2) : "NA";
+              rec["Strike Rate"] = rec["Balls Faced"]>0 ? ((rec["Runs"]/rec["Balls Faced"])*100).toFixed(2) : "0";
+              rec["Batting Average"] = rec["Dismissals"]>0 ? (rec["Runs"]/rec["Dismissals"]).toFixed(2) : "NA";
               result.push(rec);
             });
             const sorted = sortBatting(result);
+            if(sorted.length > 0) {
+              showLeaderCard(sorted[0]["Batsman"], "batting");
+            }
             renderBattingTable(sorted);
           } else if(category==="bowling") {
             const aggregated = {};
             allData.forEach(row => {
-              const name = row["Bowler"] || "";
+              const name = row["Bowler"] || row["bowler"] || "";
               if(!aggregated[name]) {
                 aggregated[name] = {
                   "Bowler": name,
@@ -567,12 +742,15 @@
             Object.keys(aggregated).forEach(name => {
               const rec = aggregated[name];
               rec["Overs"] = ballsToOvers(rec["OversBalls"]);
-              rec["Economy"] = rec["OversBalls"] > 0 ? (rec["Runs Conceded"] * 6 / rec["OversBalls"]).toFixed(2) : "0";
-              rec["Average"] = rec["Wickets"] > 0 ? (rec["Runs Conceded"] / rec["Wickets"]).toFixed(2) : "NA";
+              rec["Economy"] = rec["OversBalls"]>0 ? (rec["Runs Conceded"]*6/rec["OversBalls"]).toFixed(2) : "0";
+              rec["Average"] = rec["Wickets"]>0 ? (rec["Runs Conceded"]/rec["Wickets"]).toFixed(2) : "NA";
               delete rec["OversBalls"];
               result.push(rec);
             });
             const sorted = result.sort((a, b) => parseFloat(b["Wickets"] || 0) - parseFloat(a["Wickets"] || 0));
+            if(sorted.length > 0) {
+              showLeaderCard(sorted[0]["Bowler"], "bowling");
+            }
             renderBowlingTable(sorted);
           } else if(category==="mvp") {
             const aggregated = {};
@@ -592,6 +770,9 @@
               result.push(aggregated[name]);
             });
             const sorted = sortMVP(result);
+            if(sorted.length > 0) {
+              showLeaderCard(sorted[0]["Name"], "mvp");
+            }
             renderMVPTable(sorted);
           }
         } else {
@@ -599,8 +780,8 @@
         }
       });
     }
-    
-    // File upload & parsing (supports CSV and Excel)
+
+    /* FILE UPLOAD & PARSE */
     function uploadData() {
       const fileInput = document.getElementById("fileInput");
       const file = fileInput.files[0];
@@ -621,7 +802,7 @@
         }
         db.ref("records/" + weekType + "/" + category).set(fileContent)
           .then(() => {
-            alert("Data uploaded successfully to " + weekType + " (" + category + ")");
+            alert(`Data uploaded successfully to ${weekType} (${category})`);
             const timestamp = Date.now();
             db.ref("records/allWeeks/" + timestamp + "/" + category).set(fileContent);
           })
@@ -636,21 +817,29 @@
         reader.readAsText(file);
       }
     }
-    
+
     document.addEventListener("DOMContentLoaded", function(){
       showMainView(currentWeekType);
     });
   </script>
-  
+
   <!--
-    Instructions for Use:
-    1. Admin Login: Click "Admin Login" and enter "cricket123" to show the upload section.
-    2. Upload: Choose the week type and category, then upload a CSV/Excel file.
-    3. Weekly View: Navigate using "Last Week's Records" or "This Week's Records". The tables are built dynamically showing all CSV fields.
-       - In batting tables, the top batsman's name gets an orange cap icon.
-       - In bowling tables, the top bowler's name gets a purple cap icon.
-       - Additionally, a leader card overlay shows the top player's image (if mapped) and rotates/fades out.
-    4. Total View: Weekly files are aggregated. For batting and bowling, key stats are summed and recalculated (including extra bowling fields).
+    INSTRUCTIONS:
+    1) Weekly vs Total:
+       - "Last Week's Records" or "This Week's Records" triggers loadWeeklyData
+       - "Total" triggers loadTotalData
+    2) Categories: "batting", "bowling", "mvp"
+    3) Animations:
+       - Batting: Bat swings at ball, then confetti, then EAFC card.
+       - Bowling: Ball hits stumps, then confetti, then EAFC card.
+       - MVP: No special animation, just confetti + card.
+    4) EAFC-Style Card:
+       - Slightly bigger card with TOT background.
+       - Player face from playerImages[leaderName].
+       - Flips/fades after 2s, removed at 3.5s.
+    5) Table:
+       - IPL-like gradient header, highlight top 3 rows (gold, silver, bronze).
+       - Cap icons in top row for batting & bowling.
   -->
 </body>
 </html>
