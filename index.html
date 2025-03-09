@@ -177,7 +177,7 @@
         height: 420px;
         background: url("https://i.imgur.com/K0zYkQeb.jpg") no-repeat center center;
         background-size: cover;
-        border-radius: 20px;
+        border-radius: 0; /* Removed rounded corners */
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         display: flex;
         flex-direction: column;
@@ -187,16 +187,21 @@
         z-index: 9999;
         opacity: 1;
       }
-      .leader-card h3 {
-        margin: 0;
-        color: #fff;
+      .leader-card strong {
+        display: block;
         font-family: "Montserrat", sans-serif;
         font-size: 1.3em;
+        margin: 5px 0;
       }
       .leader-card img.leader-face {
         width: 70%;
         border-radius: 10px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      /* Scores styling below player name */
+      .scores p {
+        margin: 4px 0;
+        font-size: 0.9em;
       }
 
       /* ANIMATIONS */
@@ -306,9 +311,7 @@
       <button id="btnThis" onclick="showMainView('thisWeek')">
         This Week's Records
       </button>
-      <button id="btnTotal" onclick="showMainView('total')">
-        Total
-      </button>
+      <button id="btnTotal" onclick="showMainView('total')">Total</button>
     </div>
 
     <!-- Sub Navigation (Categories) -->
@@ -327,7 +330,11 @@
     <div class="admin-section">
       <button onclick="toggleAdminLogin()">Admin Login</button>
       <div id="adminLogin" class="hidden">
-        <input type="password" id="adminPass" placeholder="Enter Admin Password" />
+        <input
+          type="password"
+          id="adminPass"
+          placeholder="Enter Admin Password"
+        />
         <button onclick="checkPassword()">Submit</button>
       </div>
       <div id="adminUpload" class="hidden">
@@ -350,7 +357,7 @@
         <br />
         <input type="file" id="fileInput" accept=".csv, .xlsx" />
         <button onclick="uploadData()">Upload</button>
-        <p style="font-size: 0.9em;">
+        <p style="font-size: 0.9em">
           Note: The uploaded file should contain only that week’s performance.
         </p>
       </div>
@@ -615,31 +622,82 @@
         });
       }
 
-      /* EAFC-STYLE LEADER CARD WITH ANIMATION */
+      /* UNIVERSAL SCORING FUNCTION */
+      function computeUniversalScores(leader) {
+        let stats = {
+          Runs: leader.Runs ? parseFloat(leader.Runs) : 0,
+          StrikeRate: leader["Strike Rate"]
+            ? parseFloat(leader["Strike Rate"])
+            : 0,
+          BattingAverage: leader["Batting Average"]
+            ? parseFloat(leader["Batting Average"])
+            : 0,
+          Wickets: leader.Wickets ? parseFloat(leader.Wickets) : 0,
+          Economy: leader.Economy ? parseFloat(leader.Economy) : 0,
+          Average: leader.Average ? parseFloat(leader.Average) : 0,
+          Catches: leader.Catches ? parseFloat(leader.Catches) : 0
+        };
+
+        // Batting Score: 40% Runs, 30% Strike Rate, 30% Batting Average
+        let battingScore =
+          40 * Math.min(stats.Runs / 500, 1) +
+          30 * Math.min(stats.StrikeRate / 150, 1) +
+          30 * Math.min(stats.BattingAverage / 50, 1);
+
+        // Bowling Score: 40% Wickets, 30% (inverse Economy), 30% (inverse Average)
+        let bowlingScore =
+          40 * Math.min(stats.Wickets / 30, 1) +
+          30 * Math.min((8 - stats.Economy) / 8, 1) +
+          30 * Math.min((50 - stats.Average) / 50, 1);
+
+        // Fielding Score: based on Catches (assume max 20 catches)
+        let fieldingScore = 100 * Math.min(stats.Catches / 20, 1);
+
+        // All-Round Score: average of above three
+        let allRoundScore = (battingScore + bowlingScore + fieldingScore) / 3;
+
+        return {
+          batting: Math.round(battingScore),
+          bowling: Math.round(bowlingScore),
+          fielding: Math.round(fieldingScore),
+          allRound: Math.round(allRoundScore)
+        };
+      }
+
+      /* EAFC-STYLE LEADER CARD WITH SCORING */
       function showLeaderCard(leaderName, category) {
-        let animPromise;
-        if (category === "batting") {
-          animPromise = batHitBallAnimation();
-        } else if (category === "bowling") {
-          animPromise = ballHitStumpsAnimation();
-        } else {
-          animPromise = Promise.resolve();
-        }
-        animPromise.then(() => {
-          doConfetti();
-          const imageUrl =
-            playerImages[leaderName] || "https://i.imgur.com/0ut0Pbl.png";
-          const card = document.createElement("div");
-          card.className = "leader-card";
-          card.innerHTML = `<img class="leader-face" src="${imageUrl}" alt="${leaderName}"><h3>${leaderName}</h3>`;
-          document.body.appendChild(card);
-          setTimeout(() => {
-            card.classList.add("animate");
-          }, 2000);
-          setTimeout(() => {
-            card.remove();
-          }, 3500);
-        });
+        // Removed pre-card animations; proceed immediately.
+        doConfetti();
+
+        // Use the leader's aggregated stats from currentTableData
+        let leader =
+          currentTableData && currentTableData.length > 0
+            ? currentTableData[0]
+            : {};
+        let scores = computeUniversalScores(leader);
+
+        const imageUrl =
+          playerImages[leaderName] || "https://i.imgur.com/0ut0Pbl.png";
+        const card = document.createElement("div");
+        card.className = "leader-card";
+        // Leader card: player photo, then player's name in bold, then scores
+        card.innerHTML = `
+          <img class="leader-face" src="${imageUrl}" alt="${leaderName}">
+          <strong>${leaderName}</strong>
+          <div class="scores">
+            <p>Batting: ${scores.batting}</p>
+            <p>Bowling: ${scores.bowling}</p>
+            <p>Fielding: ${scores.fielding}</p>
+            <p>All-Round: ${scores.allRound}</p>
+          </div>
+        `;
+        document.body.appendChild(card);
+        setTimeout(() => {
+          card.classList.add("animate");
+        }, 2000);
+        setTimeout(() => {
+          card.remove();
+        }, 3500);
       }
 
       /* RENDERING TABLES WITH SORT BUTTONS */
@@ -907,7 +965,8 @@
                 if (!aggregated[name]) {
                   aggregated[name] = { ...row };
                   aggregated[name]["Catches"] = parseFloat(row["Catches"]) || 0;
-                  aggregated[name]["MVP Points"] = parseFloat(row["MVP Points"]) || 0;
+                  aggregated[name]["MVP Points"] =
+                    parseFloat(row["MVP Points"]) || 0;
                 } else {
                   aggregated[name]["Catches"] += parseFloat(row["Catches"]) || 0;
                   aggregated[name]["MVP Points"] +=
@@ -988,7 +1047,9 @@
          - MVP: Simply confetti + leader card.
       4) Leader Card:
          - EAFC‑style, bigger card showing player's image.
-         - Appears in weekly and total views.
+         - Player name is shown below the image in bold.
+         - Below the name, the player's scores (Batting, Bowling, Fielding, All-Round) are shown.
+         - Scores are computed out of 100 using a universal scoring system.
       5) Tables:
          - Semi‑transparent background so the stadium shows through.
          - Top 3 rows "pop out" with scale and shadow.
