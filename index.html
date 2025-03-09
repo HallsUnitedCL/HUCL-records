@@ -107,7 +107,12 @@
       th {
         color: #fff;
         font-weight: 700;
-        /* Removed sort icon from header */
+        cursor: pointer;
+        position: relative;
+      }
+      th .sort-btn {
+        font-size: 0.8em;
+        margin-left: 5px;
       }
       tbody tr:nth-child(even) {
         background-color: rgba(249, 249, 249, 0.8);
@@ -378,7 +383,7 @@
 
       let currentWeekType = "lastWeek"; // "lastWeek", "thisWeek", or "total"
       let currentCategory = "batting"; // "batting", "bowling", "mvp"
-      let currentTableData = []; // Global store for sort functionality (unused now)
+      let currentTableData = []; // Global store for sort functionality
 
       /* Mapping of player names to image URLs (update with your own URLs) */
       const playerImages = {
@@ -495,11 +500,139 @@
         };
       }
 
+      /* SORTING FUNCTIONS */
+      function sortBatting(data) {
+        return data.sort(
+          (a, b) => parseFloat(b["Runs"] || 0) - parseFloat(a["Runs"] || 0)
+        );
+      }
+      function sortBowling(data) {
+        const key = data[0].hasOwnProperty("Wickets")
+          ? "Wickets"
+          : "wickets";
+        return data.sort(
+          (a, b) => parseFloat(b[key] || 0) - parseFloat(a[key] || 0)
+        );
+      }
+      function sortMVP(data) {
+        return data.sort(
+          (a, b) =>
+            parseFloat(b["MVP Points"] || 0) - parseFloat(a["MVP Points"] || 0)
+        );
+      }
+
+      /* ATTACH SORT LISTENERS AFTER TABLE RENDER */
+      function attachSortListeners() {
+        document.querySelectorAll("th.sortable").forEach((th) => {
+            th.addEventListener("click", function () {
+                let col = th.getAttribute("data-column");
+                let sortBtn = th.querySelector("span.sort-btn");
+                let direction = sortBtn.getAttribute("data-direction") || "asc";
+                direction = direction === "asc" ? "desc" : "asc";
+                sortBtn.setAttribute("data-direction", direction);
+                currentTableData.sort((a, b) => {
+                    let aVal = a[col] !== undefined ? a[col] : "";
+                    let bVal = b[col] !== undefined ? b[col] : "";
+                    if (!isNaN(aVal) && !isNaN(bVal) && aVal !== "" && bVal !== "") {
+                        aVal = parseFloat(aVal);
+                        bVal = parseFloat(bVal);
+                        return direction === "asc" ? aVal - bVal : bVal - aVal;
+                    } else {
+                        aVal = aVal.toString().toLowerCase();
+                        bVal = bVal.toString().toLowerCase();
+                        if (aVal < bVal) return direction === "asc" ? -1 : 1;
+                        if (aVal > bVal) return direction === "asc" ? 1 : -1;
+                        return 0;
+                    }
+                });
+                if (currentCategory === "batting") {
+                    renderBattingTable(currentTableData);
+                } else if (currentCategory === "bowling") {
+                    renderBowlingTable(currentTableData);
+                } else if (currentCategory === "mvp") {
+                    renderMVPTable(currentTableData);
+                }
+            });
+        });
+    }
+
+
+      /* ANIMATION & CONFETTI FUNCTIONS */
+      function doConfetti() {
+        const duration = 2000;
+        const animationEnd = Date.now() + duration;
+        const defaults = {
+          startVelocity: 30,
+          spread: 360,
+          ticks: 60,
+          zIndex: 9999
+        };
+        const interval = setInterval(() => {
+          const timeLeft = animationEnd - Date.now();
+          if (timeLeft <= 0) {
+            clearInterval(interval);
+          }
+          const particleCount = 50 * (timeLeft / duration);
+          confetti(
+            Object.assign({}, defaults, {
+              particleCount,
+              origin: { x: Math.random(), y: Math.random() - 0.2 }
+            })
+          );
+        }, 250);
+      }
+
+      /* BAT/ BALL ANIMATION USING EMOJIS (for batting) */
+      function batHitBallAnimation() {
+        return new Promise((resolve) => {
+          const batDiv = document.createElement("div");
+          batDiv.className = "bat-animation";
+          batDiv.innerHTML = "🏏";
+          document.body.appendChild(batDiv);
+          const ballDiv = document.createElement("div");
+          ballDiv.className = "ball-animation";
+          ballDiv.innerHTML = "🏏";
+          document.body.appendChild(ballDiv);
+          batDiv.style.animation = "swingBat 2s forwards";
+          ballDiv.style.animation = "moveBall 2s forwards";
+          setTimeout(() => {
+            batDiv.remove();
+            ballDiv.remove();
+            resolve();
+          }, 2000);
+        });
+      }
+
+      /* STUMPS/ BALL ANIMATION USING EMOJIS (for bowling) */
+      function ballHitStumpsAnimation() {
+        return new Promise((resolve) => {
+          const ballDiv = document.createElement("div");
+          ballDiv.className = "ball-animation";
+          ballDiv.innerHTML = "🏏";
+          document.body.appendChild(ballDiv);
+          const stumpsDiv = document.createElement("div");
+          stumpsDiv.className = "stumps-animation";
+          stumpsDiv.innerHTML = "💥";
+          document.body.appendChild(stumpsDiv);
+          ballDiv.style.animation = "moveCricketBall 2s forwards";
+          setTimeout(() => {
+            stumpsDiv.style.animation = "shakeStumps 0.5s";
+          }, 1000);
+          setTimeout(() => {
+            ballDiv.remove();
+            stumpsDiv.remove();
+            resolve();
+          }, 2000);
+        });
+      }
+
       /* UNIVERSAL SCORING FUNCTION */
       function computeUniversalScores(leader) {
         let stats = {
           Runs: leader.Runs ? parseFloat(leader.Runs) : 0,
-          StrikeRate: leader["Strike Rate"] ? parseFloat(leader["Strike Rate"]) : 0,
+          StrikeRate: leader["Strike Rate"]
+            ? parseFloat(leader["Strike Rate"])
+            : 0,
           BattingAverage: leader["Batting Average"]
             ? parseFloat(leader["Batting Average"])
             : 0,
@@ -508,8 +641,6 @@
           Average: leader.Average ? parseFloat(leader.Average) : 0,
           Catches: leader.Catches ? parseFloat(leader.Catches) : 0
         };
-
-        console.log("Stats for", leader.Batsman || leader.Name, ":", stats);
 
         // Batting Score: 40% Runs, 30% Strike Rate, 30% Batting Average
         let battingScore =
@@ -529,17 +660,6 @@
         // All-Round Score: average of above three
         let allRoundScore = (battingScore + bowlingScore + fieldingScore) / 3;
 
-        console.log(
-          "Scores computed: Batting:",
-          battingScore,
-          "Bowling:",
-          bowlingScore,
-          "Fielding:",
-          fieldingScore,
-          "AllRound:",
-          allRoundScore
-        );
-
         return {
           batting: Math.round(battingScore),
           bowling: Math.round(bowlingScore),
@@ -550,7 +670,7 @@
 
       /* EAFC-STYLE LEADER CARD WITH SCORING */
       function showLeaderCard(leaderName, category) {
-        // No pre-card animations; proceed immediately.
+        // Removed pre-card animations; proceed immediately.
         doConfetti();
 
         // Use the leader's aggregated stats from currentTableData
@@ -584,9 +704,9 @@
         }, 3500);
       }
 
-      /* RENDERING TABLES (Sort functionality removed) */
+      /* RENDERING TABLES WITH SORT BUTTONS */
       function renderBattingTable(data) {
-        currentTableData = data; // store globally for potential use
+        currentTableData = data; // store globally for sorting
         if (data.length === 0) {
           document.getElementById("tableContainer").innerHTML =
             "<p>No records available</p>";
@@ -597,8 +717,7 @@
         );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
-          // Removed sort functionality from header
-          html += `<th>${header}</th>`;
+          html += `<th class="sortable" data-column="${header}">${header} <span class="sort-btn" data-direction="none">&#x21C5;</span></th>`;
         });
         html += `</tr></thead><tbody>`;
         data.forEach((row, index) => {
@@ -619,6 +738,7 @@
         });
         html += `</tbody></table>`;
         document.getElementById("tableContainer").innerHTML = html;
+        attachSortListeners();
       }
 
       function renderBowlingTable(data) {
@@ -633,8 +753,7 @@
         );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
-          // Removed sort functionality from header
-          html += `<th>${header}</th>`;
+          html += `<th class="sortable" data-column="${header}">${header} <span class="sort-btn" data-direction="none">&#x21C5;</span></th>`;
         });
         html += `</tr></thead><tbody>`;
         data.forEach((row, index) => {
@@ -655,6 +774,7 @@
         });
         html += `</tbody></table>`;
         document.getElementById("tableContainer").innerHTML = html;
+        attachSortListeners();
       }
 
       function renderMVPTable(data) {
@@ -669,8 +789,7 @@
         );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
-          // Removed sort functionality from header
-          html += `<th>${header}</th>`;
+          html += `<th class="sortable" data-column="${header}">${header} <span class="sort-btn" data-direction="none">&#x21C5;</span></th>`;
         });
         html += `</tr></thead><tbody>`;
         data.forEach((row) => {
@@ -682,6 +801,7 @@
         });
         html += `</tbody></table>`;
         document.getElementById("tableContainer").innerHTML = html;
+        attachSortListeners();
       }
 
       /* LOAD WEEKLY DATA FROM FIREBASE */
@@ -933,12 +1053,12 @@
          - EAFC‑style, bigger card showing player's image.
          - Player name is shown below the image in bold.
          - Below the name, the player's scores (Batting, Bowling, Fielding, All-Round) are shown.
-         - Scores are computed out of 100 using a universal scoring system with logging.
+         - Scores are computed out of 100 using a universal scoring system.
       5) Tables:
          - Semi‑transparent background so the stadium shows through.
          - Top 3 rows "pop out" with scale and shadow.
          - "Runs" (batting) and "Wickets" (bowling) columns use a highlighted font.
-         - Sort functionality has been removed.
+         - Each header is sortable via a click on the sort icon.
     -->
   </body>
 </html>
