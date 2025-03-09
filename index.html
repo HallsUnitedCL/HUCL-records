@@ -177,7 +177,7 @@
         height: 420px;
         background: url("https://i.imgur.com/K0zYkQeb.jpg") no-repeat center center;
         background-size: cover;
-        border-radius: 0; /* Removed rounded corners */
+        border-radius: 0 !important; /* Removed rounded corners */
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         display: flex;
         flex-direction: column;
@@ -524,34 +524,38 @@
       /* ATTACH SORT LISTENERS AFTER TABLE RENDER */
       function attachSortListeners() {
         document.querySelectorAll("th.sortable").forEach((th) => {
-          th.addEventListener("click", function () {
-            let col = th.getAttribute("data-column");
-            let sortBtn = th.querySelector("span.sort-btn");
-            let direction = sortBtn.getAttribute("data-direction");
-            direction = direction === "asc" ? "desc" : "asc";
-            sortBtn.setAttribute("data-direction", direction);
-            currentTableData.sort((a, b) => {
-              let aVal = a[col] || "";
-              let bVal = b[col] || "";
-              if (!isNaN(aVal) && !isNaN(bVal)) {
-                aVal = parseFloat(aVal);
-                bVal = parseFloat(bVal);
-              }
-              if (aVal < bVal) return direction === "asc" ? -1 : 1;
-              if (aVal > bVal) return direction === "asc" ? 1 : -1;
-              return 0;
+            th.addEventListener("click", function () {
+                let col = th.getAttribute("data-column");
+                let sortBtn = th.querySelector("span.sort-btn");
+                let direction = sortBtn.getAttribute("data-direction") || "asc";
+                direction = direction === "asc" ? "desc" : "asc";
+                sortBtn.setAttribute("data-direction", direction);
+                currentTableData.sort((a, b) => {
+                    let aVal = a[col] !== undefined ? a[col] : "";
+                    let bVal = b[col] !== undefined ? b[col] : "";
+                    if (!isNaN(aVal) && !isNaN(bVal) && aVal !== "" && bVal !== "") {
+                        aVal = parseFloat(aVal);
+                        bVal = parseFloat(bVal);
+                        return direction === "asc" ? aVal - bVal : bVal - aVal;
+                    } else {
+                        aVal = aVal.toString().toLowerCase();
+                        bVal = bVal.toString().toLowerCase();
+                        if (aVal < bVal) return direction === "asc" ? -1 : 1;
+                        if (aVal > bVal) return direction === "asc" ? 1 : -1;
+                        return 0;
+                    }
+                });
+                if (currentCategory === "batting") {
+                    renderBattingTable(currentTableData);
+                } else if (currentCategory === "bowling") {
+                    renderBowlingTable(currentTableData);
+                } else if (currentCategory === "mvp") {
+                    renderMVPTable(currentTableData);
+                }
             });
-            // Re-render table based on category
-            if (currentCategory === "batting") {
-              renderBattingTable(currentTableData);
-            } else if (currentCategory === "bowling") {
-              renderBowlingTable(currentTableData);
-            } else if (currentCategory === "mvp") {
-              renderMVPTable(currentTableData);
-            }
-          });
         });
-      }
+    }
+
 
       /* ANIMATION & CONFETTI FUNCTIONS */
       function doConfetti() {
