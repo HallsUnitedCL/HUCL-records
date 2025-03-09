@@ -326,11 +326,7 @@
     <div class="admin-section">
       <button onclick="toggleAdminLogin()">Admin Login</button>
       <div id="adminLogin" class="hidden">
-        <input
-          type="password"
-          id="adminPass"
-          placeholder="Enter Admin Password"
-        />
+        <input type="password" id="adminPass" placeholder="Enter Admin Password" />
         <button onclick="checkPassword()">Submit</button>
       </div>
       <div id="adminUpload" class="hidden">
@@ -379,7 +375,7 @@
 
       let currentWeekType = "lastWeek"; // "lastWeek", "thisWeek", or "total"
       let currentCategory = "batting"; // "batting", "bowling", "mvp"
-      let currentTableData = []; // Global store for (unused) sort functionality
+      let currentTableData = []; // Global store (sort functionality removed)
 
       /* Mapping of player names to image URLs (update with your own URLs) */
       const playerImages = {
@@ -496,15 +492,6 @@
         };
       }
 
-      /* SORTING FUNCTIONS - COMMENTED OUT */
-      // function attachSortListeners() {
-      //   document.querySelectorAll("th.sortable").forEach((th) => {
-      //     th.addEventListener("click", function () {
-      //       // Sorting code removed
-      //     });
-      //   });
-      // }
-
       /* UNIVERSAL SCORING FUNCTION */
       function computeUniversalScores(leader) {
         let stats = {
@@ -570,6 +557,7 @@
           playerImages[leaderName] || "https://i.imgur.com/0ut0Pbl.png";
         const card = document.createElement("div");
         card.className = "leader-card";
+        // Player card: image, then player's name in bold, then scores
         card.innerHTML = `
           <img class="leader-face" src="${imageUrl}" alt="${leaderName}">
           <strong>${leaderName}</strong>
@@ -589,7 +577,7 @@
         }, 3500);
       }
 
-      /* RENDERING TABLES WITH SORT BUTTONS (Sort functionality commented out) */
+      /* RENDERING TABLES (Sort functionality removed) */
       function renderBattingTable(data) {
         currentTableData = data; // store globally for potential use
         if (data.length === 0) {
@@ -597,7 +585,9 @@
             "<p>No records available</p>";
           return;
         }
-        const headers = Object.keys(data[0]).filter((key) => key.trim() !== "");
+        const headers = Object.keys(data[0]).filter(
+          (key) => key.trim() !== ""
+        );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
           // Sortable headers commented out
@@ -622,7 +612,6 @@
         });
         html += `</tbody></table>`;
         document.getElementById("tableContainer").innerHTML = html;
-        // attachSortListeners(); // Sort functionality commented out
       }
 
       function renderBowlingTable(data) {
@@ -632,7 +621,9 @@
             "<p>No records available</p>";
           return;
         }
-        const headers = Object.keys(data[0]).filter((key) => key.trim() !== "");
+        const headers = Object.keys(data[0]).filter(
+          (key) => key.trim() !== ""
+        );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
           html += `<th>${header}</th>`;
@@ -656,7 +647,6 @@
         });
         html += `</tbody></table>`;
         document.getElementById("tableContainer").innerHTML = html;
-        // attachSortListeners(); // Sort functionality commented out
       }
 
       function renderMVPTable(data) {
@@ -666,7 +656,9 @@
             "<p>No records available</p>";
           return;
         }
-        const headers = Object.keys(data[0]).filter((key) => key.trim() !== "");
+        const headers = Object.keys(data[0]).filter(
+          (key) => key.trim() !== ""
+        );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
           html += `<th>${header}</th>`;
@@ -681,7 +673,6 @@
         });
         html += `</tbody></table>`;
         document.getElementById("tableContainer").innerHTML = html;
-        // attachSortListeners(); // Sort functionality commented out
       }
 
       /* LOAD WEEKLY DATA FROM FIREBASE */
@@ -692,19 +683,19 @@
             let data = parseCSV(fileContent);
             if (category === "batting") {
               data = data.map(transformBattingData);
-              data = sortBatting(data);
+              // Removed sortBatting call
               if (data.length > 0) {
                 showLeaderCard(data[0]["Batsman"], "batting");
               }
               renderBattingTable(data);
             } else if (category === "bowling") {
-              data = sortBowling(data);
+              // Removed sortBowling call
               if (data.length > 0) {
                 showLeaderCard(data[0]["Bowler"] || data[0]["bowler"], "bowling");
               }
               renderBowlingTable(data);
             } else if (category === "mvp") {
-              data = sortMVP(data);
+              // Removed sortMVP call
               if (data.length > 0) {
                 showLeaderCard(data[0]["Name"], "mvp");
               }
@@ -736,25 +727,20 @@
                 if (!aggregated[name]) {
                   aggregated[name] = { ...rowT };
                   aggregated[name]["Runs"] = parseFloat(rowT["Runs"]) || 0;
-                  aggregated[name]["Balls Faced"] =
-                    parseFloat(rowT["Balls Faced"]) || 0;
+                  aggregated[name]["Balls Faced"] = parseFloat(rowT["Balls Faced"]) || 0;
                   aggregated[name]["Sixes"] = parseFloat(rowT["Sixes"]) || 0;
                   aggregated[name]["Fours"] = parseFloat(rowT["Fours"]) || 0;
                   aggregated[name]["Singles"] = parseFloat(rowT["Singles"]) || 0;
-                  aggregated[name]["Dismissals"] =
-                    parseFloat(rowT["Dismissals"]) || 0;
+                  aggregated[name]["Dismissals"] = parseFloat(rowT["Dismissals"]) || 0;
                   aggregated[name]["50/100"] = parseFloat(rowT["50/100"]) || 0;
-                  aggregated[name]["Highest Score"] =
-                    parseFloat(rowT["Highest Score"]) || 0;
+                  aggregated[name]["Highest Score"] = parseFloat(rowT["Highest Score"]) || 0;
                 } else {
                   aggregated[name]["Runs"] += parseFloat(rowT["Runs"]) || 0;
-                  aggregated[name]["Balls Faced"] +=
-                    parseFloat(rowT["Balls Faced"]) || 0;
+                  aggregated[name]["Balls Faced"] += parseFloat(rowT["Balls Faced"]) || 0;
                   aggregated[name]["Sixes"] += parseFloat(rowT["Sixes"]) || 0;
                   aggregated[name]["Fours"] += parseFloat(rowT["Fours"]) || 0;
                   aggregated[name]["Singles"] += parseFloat(rowT["Singles"]) || 0;
-                  aggregated[name]["Dismissals"] +=
-                    parseFloat(rowT["Dismissals"]) || 0;
+                  aggregated[name]["Dismissals"] += parseFloat(rowT["Dismissals"]) || 0;
                   aggregated[name]["50/100"] += parseFloat(rowT["50/100"]) || 0;
                   aggregated[name]["Highest Score"] = Math.max(
                     aggregated[name]["Highest Score"],
@@ -775,11 +761,11 @@
                     : "NA";
                 result.push(rec);
               });
-              const sorted = sortBatting(result);
-              if (sorted.length > 0) {
-                showLeaderCard(sorted[0]["Batsman"], "batting");
+              // Removed sortBatting call
+              if (result.length > 0) {
+                showLeaderCard(result[0]["Batsman"], "batting");
               }
-              renderBattingTable(sorted);
+              renderBattingTable(result);
             } else if (category === "bowling") {
               const aggregated = {};
               allData.forEach((row) => {
@@ -834,14 +820,11 @@
                 delete rec["OversBalls"];
                 result.push(rec);
               });
-              const sorted = result.sort(
-                (a, b) =>
-                  parseFloat(b["Wickets"] || 0) - parseFloat(a["Wickets"] || 0)
-              );
-              if (sorted.length > 0) {
-                showLeaderCard(sorted[0]["Bowler"], "bowling");
+              // Removed sort call for bowling
+              if (result.length > 0) {
+                showLeaderCard(result[0]["Bowler"], "bowling");
               }
-              renderBowlingTable(sorted);
+              renderBowlingTable(result);
             } else if (category === "mvp") {
               const aggregated = {};
               allData.forEach((row) => {
@@ -861,11 +844,11 @@
               Object.keys(aggregated).forEach((name) => {
                 result.push(aggregated[name]);
               });
-              const sorted = sortMVP(result);
-              if (sorted.length > 0) {
-                showLeaderCard(sorted[0]["Name"], "mvp");
+              // Removed sort call for MVP
+              if (result.length > 0) {
+                showLeaderCard(result[0]["Name"], "mvp");
               }
-              renderMVPTable(sorted);
+              renderMVPTable(result);
             }
           } else {
             document.getElementById("tableContainer").innerHTML =
@@ -938,7 +921,7 @@
          - Semi‑transparent background so the stadium shows through.
          - Top 3 rows "pop out" with scale and shadow.
          - "Runs" (batting) and "Wickets" (bowling) columns use a highlighted font.
-         - Sort functionality is currently commented out.
+         - Sort functionality is removed.
     -->
   </body>
 </html>
