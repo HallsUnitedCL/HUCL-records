@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Halls United Cricket League HUCL</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <!-- SheetJS for Excel parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Overall Body & Background */
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      background: url('https://documents.bcci.tv/resizedimageskirti/Greenfield_International_Stadium_compressed.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    /* Header Styling */
+    header {
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      text-align: center;
+    }
+    header h1 {
+      font-family: 'Montserrat', sans-serif;
+      margin: 0;
+      font-size: 2.5em;
+      color: #ffd700;
+    }
+    /* Navigation Buttons */
+    .nav-main, .nav-sub {
+      text-align: center;
+      margin: 15px 0;
+    }
+    .nav-main button, .nav-sub button, .admin-section button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #ff4500;
+      color: #fff;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    .nav-main button:hover, .nav-sub button:hover {
+      background-color: #ffa500;
+      transform: scale(1.05);
+    }
+    .nav-main button.active, .nav-sub button.active {
+      background-color: #ffd700;
+      color: #000;
+    }
+    /* Content Area */
+    .content {
+      width: 95%;
+      max-width: 1200px;
+      margin: 20px auto;
+      background-color: rgba(255, 255, 255, 0.95);
+      color: #333;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      position: relative;
+    }
+    /* Table Styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #ff4500;
+      color: #fff;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tbody tr:nth-child(odd) {
+      background-color: #fff;
+    }
+    tbody tr:hover {
+      background-color: #ffe5d9;
+    }
+    /* Admin Section */
+    .admin-section {
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 10px;
+      margin: 15px;
+      border-radius: 5px;
+      text-align: center;
+    }
+    .admin-section input, .admin-section select {
+      padding: 5px;
+      margin: 5px;
+    }
+    .hidden {
+      display: none;
+    }
+    /* Cap Icon Styling */
+    img {
+      width: 20px;
+      vertical-align: middle;
+    }
+    /* Leader Card Styles */
+    .leader-card {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      text-align: center;
+      padding: 10px;
+      z-index: 9999;
+      opacity: 1;
+    }
+    .leader-card img {
+      width: 100%;
+      border-radius: 10px 10px 0 0;
+    }
+    .leader-card h3 {
+      margin: 5px 0;
+      color: #333;
+    }
+    @keyframes flipAndFade {
+      0% {
+        transform: translate(-50%, -50%) rotateY(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) rotateY(360deg);
+        opacity: 0;
+      }
+    }
+    .leader-card.animate {
+      animation: flipAndFade 2s forwards;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Halls United Cricket League HUCL</h1>
+  </header>
+  
+  <!-- Main Navigation -->
+  <div class="nav-main">
+    <button id="btnLast" onclick="showMainView('lastWeek')" class="active">Last Week's Records</button>
+    <button id="btnThis" onclick="showMainView('thisWeek')">This Week's Records</button>
+    <button id="btnTotal" onclick="showMainView('total')">Total</button>
+  </div>
+  
+  <!-- Sub Navigation (Categories) -->
+  <div class="nav-sub" id="subNav">
+    <button id="btnBatting" onclick="showCategory('batting')">Orange Cap</button>
+    <button id="btnBowling" onclick="showCategory('bowling')">Purple Cap</button>
+    <button id="btnMVP" onclick="showCategory('mvp')">MVP</button>
+  </div>
+  
+  <!-- Content area -->
+  <div class="content" id="tableContainer">
+    <!-- Table will be rendered here -->
+  </div>
+  
+  <!-- Admin Section -->
+  <div class="admin-section">
+    <button onclick="toggleAdminLogin()">Admin Login</button>
+    <div id="adminLogin" class="hidden">
+      <input type="password" id="adminPass" placeholder="Enter Admin Password" />
+      <button onclick="checkPassword()">Submit</button>
+    </div>
+    <div id="adminUpload" class="hidden">
+      <h3>Upload Weekly Data</h3>
+      <label>
+        Week Type:
+        <select id="weekType">
+          <option value="thisWeek">This Week</option>
+          <option value="lastWeek">Last Week</option>
+        </select>
+      </label>
+      <label>
+        Category:
+        <select id="category">
+          <option value="batting">Batting (Orange Cap)</option>
+          <option value="bowling">Bowling (Purple Cap)</option>
+          <option value="mvp">MVP</option>
+        </select>
+      </label>
+      <br/>
+      <input type="file" id="fileInput" accept=".csv, .xlsx" />
+      <button onclick="uploadData()">Upload</button>
+      <p style="font-size: 0.9em;">Note: The uploaded file should contain only that week’s performance.</p>
+    </div>
+  </div>
+  
+  <script>
+    // Firebase configuration – REPLACE with your project details if needed.
+    const firebaseConfig = {
+      apiKey: "AIzaSyBDfZW5VH_uWNGY0Krsy9wQt5mcHXgLMgY",
+      authDomain: "hallscl.firebaseapp.com",
+      databaseURL: "https://hallscl-default-rtdb.europe-west1.firebasedatabase.app/",
+      projectId: "hallscl",
+      storageBucket: "hallscl.appspot.com",
+      messagingSenderId: "176761403936",
+      appId: "1:176761403936:web:c9c36c7ca955fa896c9a45"
+    };
+    
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+      console.log("✅ Firebase connected successfully!");
+    }
+    const db = firebase.database();
+    
+    let currentWeekType = "lastWeek"; // "lastWeek", "thisWeek", or "total"
+    let currentCategory = "batting"; // "batting", "bowling", "mvp"
+    
+    // Mapping of player names to image URLs for the leader card.
+    const playerImages = {
+      "Tavnoor": "https://example.com/tavnoor.png",
+      "Karan": "https://i.imgur.com/ODDmYHQ.jpeg",
+      // Add more mappings as needed.
+    };
+    
+    // Function to show the leader card overlay.
+    function showLeaderCard(leaderName, category) {
+      const imageUrl = playerImages[leaderName] || "https://example.com/default.png";
+      const card = document.createElement("div");
+      card.className = "leader-card";
+      card.innerHTML = `<img src="${imageUrl}" alt="${leaderName}"><h3>${leaderName}</h3>`;
+      document.body.appendChild(card);
+      // Wait 2 seconds then start animation.
+      setTimeout(() => { card.classList.add("animate"); }, 2000);
+      // Remove the card after 4 seconds total.
+      setTimeout(() => { if (card.parentNode) { card.parentNode.removeChild(card); } }, 4000);
+    }
+    
+    // Toggle Admin Login display.
+    function toggleAdminLogin() {
+      document.getElementById("adminLogin").classList.toggle("hidden");
+    }
+    
+    // Check admin password.
+    function checkPassword() {
+      const pass = document.getElementById("adminPass").value;
+      if (pass === "cricket123") {
+        localStorage.setItem("isAdmin", "true");
+        document.getElementById("adminUpload").classList.remove("hidden");
+        document.getElementById("adminLogin").classList.add("hidden");
+      } else {
+        alert("Incorrect password");
+      }
+    }
+    
+    // Main view navigation: lastWeek, thisWeek, total.
+    function showMainView(weekType) {
+      currentWeekType = weekType;
+      document.getElementById("btnLast").classList.toggle("active", weekType==="lastWeek");
+      document.getElementById("btnThis").classList.toggle("active", weekType==="thisWeek");
+      document.getElementById("btnTotal").classList.toggle("active", weekType==="total");
+      showCategory(currentCategory);
+    }
+    
+    // Sub category navigation: batting, bowling, mvp.
+    function showCategory(category) {
+      currentCategory = category;
+      document.getElementById("btnBatting").classList.toggle("active", category==="batting");
+      document.getElementById("btnBowling").classList.toggle("active", category==="bowling");
+      document.getElementById("btnMVP").classList.toggle("active", category==="mvp");
+      
+      if(currentWeekType === "total") {
+        loadTotalData(category);
+      } else {
+        loadWeeklyData(currentWeekType, category);
+      }
+    }
+    
+    // CSV parser (handles BOM, delimiters, extra spaces)
+    function parseCSV(csvText) {
+      csvText = csvText.replace(/^\uFEFF/, '');
+      let delimiter = csvText.indexOf("\t") > -1 ? "\t" : ",";
+      const lines = csvText.trim().split(/\r\n|\n|\r/);
+      let headers = lines[0].split(delimiter).map(h => h.trim());
+      if (headers.length === 1) {
+        delimiter = "\t";
+        headers = lines[0].split(delimiter).map(h => h.trim());
+      }
+      console.log("Detected delimiter:", delimiter, "Headers:", headers);
+      const data = [];
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const cols = line.split(delimiter).map(c => c.trim());
+        if (cols.length < headers.length) {
+          console.warn(`Skipping row ${i}:`, line);
+          continue;
+        }
+        let row = {};
+        headers.forEach((h, index) => {
+          row[h] = cols[index];
+        });
+        data.push(row);
+      }
+      console.log("Parsed data:", data);
+      return data;
+    }
+    
+    // Helper functions for overs conversion (bowling)
+    function oversToBalls(oversStr) {
+      if(oversStr.indexOf('.') === -1) {
+        return parseInt(oversStr) * 6;
+      }
+      const parts = oversStr.split(".");
+      const overs = parseInt(parts[0]);
+      const balls = parseInt(parts[1]);
+      return overs * 6 + balls;
+    }
+    
+    function ballsToOvers(balls) {
+      const overs = Math.floor(balls / 6);
+      const rem = balls % 6;
+      return overs + "." + rem;
+    }
+    
+    // Helper: Transform batting row to normalized keys.
+    function transformBattingData(row) {
+      return {
+        "Batsman": row["Batsmen"] || row["Batsman"] || "",
+        "Runs": row["runs scored"] || row["Runs"] || "",
+        "Balls Faced": row["Balls"] || row["Balls Faced"] || "",
+        "Sixes": row["6's"] || row["Sixes"] || "",
+        "Fours": row["4's"] || row["Fours"] || "",
+        "Singles": row["1's"] || row["Singles"] || "",
+        "Strike Rate": row["Strike rate"] || row["Strike Rate"] || "",
+        "Batting Average": row["Average"] || row["Batting Average"] || "",
+        "Dismissals": row["dismissed"] || row["Dismissals"] || "",
+        "Highest Score": row["HS"] || row["Highest Score"] || "",
+        "50/100": row["50/100s"] || row["50/100"] || ""
+      };
+    }
+    
+    // Sorting functions
+    function sortBatting(data) {
+      return data.sort((a, b) => parseFloat(b["Runs"] || 0) - parseFloat(a["Runs"] || 0));
+    }
+    function sortBowling(data) {
+      // Use key "Wickets" or "wickets" (case-insensitive)
+      const key = data[0].hasOwnProperty("Wickets") ? "Wickets" : "wickets";
+      return data.sort((a, b) => parseFloat(b[key] || 0) - parseFloat(a[key] || 0));
+    }
+    function sortMVP(data) {
+      return data.sort((a, b) => parseFloat(b["MVP Points"] || 0) - parseFloat(a["MVP Points"] || 0));
+    }
+    
+    // Dynamic table rendering functions with cap icons
+    function renderBattingTable(data) {
+      if (data.length === 0) {
+        document.getElementById("tableContainer").innerHTML = "<p>No records available</p>";
+        return;
+      }
+      const headers = Object.keys(data[0]).filter(key => key.trim() !== "");
+      let html = `<table>
+        <thead>
+          <tr>`;
+      headers.forEach(header => {
+        html += `<th>${header}</th>`;
+      });
+      html += `</tr>
+        </thead>
+        <tbody>`;
+      data.forEach((row, index) => {
+        html += `<tr>`;
+        headers.forEach(header => {
+          if(header.toLowerCase() === "batsman" && index === 0) {
+            html += `<td>${row[header]} <img src="https://t4.ftcdn.net/jpg/00/65/47/97/240_F_65479706_Q435JgT6L5lRI9DZdSW0xcipgCuXZAFp.jpg" alt="Orange Cap" style="width:20px;vertical-align:middle;"></td>`;
+          } else {
+            html += `<td>${row[header]}</td>`;
+          }
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+      document.getElementById("tableContainer").innerHTML = html;
+    }
+    
+    function renderBowlingTable(data) {
+      if (data.length === 0) {
+        document.getElementById("tableContainer").innerHTML = "<p>No records available</p>";
+        return;
+      }
+      const headers = Object.keys(data[0]).filter(key => key.trim() !== "");
+      let html = `<table>
+        <thead>
+          <tr>`;
+      headers.forEach(header => {
+        html += `<th>${header}</th>`;
+      });
+      html += `</tr>
+        </thead>
+        <tbody>`;
+      data.forEach((row, index) => {
+        html += `<tr>`;
+        headers.forEach(header => {
+          if(header.toLowerCase() === "bowler" && index === 0) {
+            html += `<td>${row[header]} <img src="https://t4.ftcdn.net/jpg/12/43/50/17/240_F_1243501749_mKioxoFNY6Wo0vCkNECAXWb5fpk7PKK5.jpg" alt="Purple Cap" style="width:20px;vertical-align:middle;"></td>`;
+          } else {
+            html += `<td>${row[header]}</td>`;
+          }
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+      document.getElementById("tableContainer").innerHTML = html;
+    }
+    
+    function renderMVPTable(data) {
+      if (data.length === 0) {
+        document.getElementById("tableContainer").innerHTML = "<p>No records available</p>";
+        return;
+      }
+      const headers = Object.keys(data[0]).filter(key => key.trim() !== "");
+      let html = `<table>
+        <thead>
+          <tr>`;
+      headers.forEach(header => {
+        html += `<th>${header}</th>`;
+      });
+      html += `</tr>
+        </thead>
+        <tbody>`;
+      data.forEach(row => {
+        html += `<tr>`;
+        headers.forEach(header => {
+          html += `<td>${row[header]}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+      document.getElementById("tableContainer").innerHTML = html;
+    }
+    
+    // Load weekly data from Firebase for a given category (batting, bowling, mvp)
+    function loadWeeklyData(weekType, category) {
+      db.ref("records/" + weekType + "/" + category).once("value", snapshot => {
+        if(snapshot.exists()){
+          const fileContent = snapshot.val();
+          let data = parseCSV(fileContent);
+          if(category==="batting") {
+            data = data.map(transformBattingData);
+            data = sortBatting(data);
+            if(data.length > 0) {
+              showLeaderCard(data[0]["Batsman"], "batting");
+            }
+            renderBattingTable(data);
+          } else if(category==="bowling") {
+            data = sortBowling(data);
+            if(data.length > 0) {
+              showLeaderCard(data[0]["Bowler"] || data[0]["bowler"], "bowling");
+            }
+            renderBowlingTable(data);
+          } else if(category==="mvp") {
+            data = sortMVP(data);
+            if(data.length > 0) {
+              showLeaderCard(data[0]["Name"], "mvp");
+            }
+            renderMVPTable(data);
+          }
+        } else {
+          document.getElementById("tableContainer").innerHTML = "<p>No records found for " + weekType + " (" + category + ")</p>";
+        }
+      });
+    }
+    
+    // Load and aggregate all weeks’ data for Total view
+    function loadTotalData(category) {
+      db.ref("records/allWeeks").once("value", snapshot => {
+        if(snapshot.exists()){
+          const weeks = snapshot.val();
+          let allData = [];
+          Object.keys(weeks).forEach(weekKey => {
+            if(weeks[weekKey][category]) {
+              const weekData = parseCSV(weeks[weekKey][category]);
+              allData = allData.concat(weekData);
+            }
+          });
+          if(category==="batting") {
+            const aggregated = {};
+            allData.forEach(row => {
+              const rowT = transformBattingData(row);
+              const name = rowT["Batsman"];
+              if(!aggregated[name]) {
+                aggregated[name] = { ...rowT };
+                aggregated[name]["Runs"] = parseFloat(rowT["Runs"]) || 0;
+                aggregated[name]["Balls Faced"] = parseFloat(rowT["Balls Faced"]) || 0;
+                aggregated[name]["Sixes"] = parseFloat(rowT["Sixes"]) || 0;
+                aggregated[name]["Fours"] = parseFloat(rowT["Fours"]) || 0;
+                aggregated[name]["Singles"] = parseFloat(rowT["Singles"]) || 0;
+                aggregated[name]["Dismissals"] = parseFloat(rowT["Dismissals"]) || 0;
+                aggregated[name]["50/100"] = parseFloat(rowT["50/100"]) || 0;
+                aggregated[name]["Highest Score"] = parseFloat(rowT["Highest Score"]) || 0;
+              } else {
+                aggregated[name]["Runs"] += parseFloat(rowT["Runs"]) || 0;
+                aggregated[name]["Balls Faced"] += parseFloat(rowT["Balls Faced"]) || 0;
+                aggregated[name]["Sixes"] += parseFloat(rowT["Sixes"]) || 0;
+                aggregated[name]["Fours"] += parseFloat(rowT["Fours"]) || 0;
+                aggregated[name]["Singles"] += parseFloat(rowT["Singles"]) || 0;
+                aggregated[name]["Dismissals"] += parseFloat(rowT["Dismissals"]) || 0;
+                aggregated[name]["50/100"] += parseFloat(rowT["50/100"]) || 0;
+                aggregated[name]["Highest Score"] = Math.max(aggregated[name]["Highest Score"], parseFloat(rowT["Highest Score"]) || 0);
+              }
+            });
+            const result = [];
+            Object.keys(aggregated).forEach(name => {
+              const rec = aggregated[name];
+              rec["Strike Rate"] = rec["Balls Faced"] > 0 ? (rec["Runs"] / rec["Balls Faced"] * 100).toFixed(2) : "0";
+              rec["Batting Average"] = rec["Dismissals"] > 0 ? (rec["Runs"] / rec["Dismissals"]).toFixed(2) : "NA";
+              result.push(rec);
+            });
+            const sorted = sortBatting(result);
+            renderBattingTable(sorted);
+          } else if(category==="bowling") {
+            const aggregated = {};
+            allData.forEach(row => {
+              const name = row["Bowler"] || "";
+              if(!aggregated[name]) {
+                aggregated[name] = {
+                  "Bowler": name,
+                  "Wickets": parseFloat(row["wickets"] || row["Wickets"] || 0),
+                  "OversBalls": oversToBalls(row["overs"] || row["Overs"] || "0"),
+                  "Runs Conceded": parseFloat(row["runs conceded"] || row["Runs Conceded"] || 0),
+                  "6s Conceded": parseFloat(row["6's conceded"] || row["6s Conceded"] || 0),
+                  "4s Conceded": parseFloat(row["4's conceded"] || row["4s Conceded"] || 0),
+                  "1s Conceded": parseFloat(row["1's conceded"] || row["1s Conceded"] || 0),
+                  "Dots": parseFloat(row["Dots"] || 0),
+                  "Maiden": parseFloat(row["Maiden"] || 0),
+                  "Balls": parseFloat(row["Balls"] || 0)
+                };
+              } else {
+                aggregated[name]["Wickets"] += parseFloat(row["wickets"] || row["Wickets"] || 0);
+                aggregated[name]["OversBalls"] += oversToBalls(row["overs"] || row["Overs"] || "0");
+                aggregated[name]["Runs Conceded"] += parseFloat(row["runs conceded"] || row["Runs Conceded"] || 0);
+                aggregated[name]["6s Conceded"] += parseFloat(row["6's conceded"] || row["6s Conceded"] || 0);
+                aggregated[name]["4s Conceded"] += parseFloat(row["4's conceded"] || row["4s Conceded"] || 0);
+                aggregated[name]["1s Conceded"] += parseFloat(row["1's conceded"] || row["1s Conceded"] || 0);
+                aggregated[name]["Dots"] += parseFloat(row["Dots"] || 0);
+                aggregated[name]["Maiden"] += parseFloat(row["Maiden"] || 0);
+                aggregated[name]["Balls"] += parseFloat(row["Balls"] || 0);
+              }
+            });
+            const result = [];
+            Object.keys(aggregated).forEach(name => {
+              const rec = aggregated[name];
+              rec["Overs"] = ballsToOvers(rec["OversBalls"]);
+              rec["Economy"] = rec["OversBalls"] > 0 ? (rec["Runs Conceded"] * 6 / rec["OversBalls"]).toFixed(2) : "0";
+              rec["Average"] = rec["Wickets"] > 0 ? (rec["Runs Conceded"] / rec["Wickets"]).toFixed(2) : "NA";
+              delete rec["OversBalls"];
+              result.push(rec);
+            });
+            const sorted = result.sort((a, b) => parseFloat(b["Wickets"] || 0) - parseFloat(a["Wickets"] || 0));
+            renderBowlingTable(sorted);
+          } else if(category==="mvp") {
+            const aggregated = {};
+            allData.forEach(row => {
+              const name = row["Name"];
+              if(!aggregated[name]){
+                aggregated[name] = { ...row };
+                aggregated[name]["Catches"] = parseFloat(row["Catches"]) || 0;
+                aggregated[name]["MVP Points"] = parseFloat(row["MVP Points"]) || 0;
+              } else {
+                aggregated[name]["Catches"] += parseFloat(row["Catches"]) || 0;
+                aggregated[name]["MVP Points"] += parseFloat(row["MVP Points"]) || 0;
+              }
+            });
+            const result = [];
+            Object.keys(aggregated).forEach(name => {
+              result.push(aggregated[name]);
+            });
+            const sorted = sortMVP(result);
+            renderMVPTable(sorted);
+          }
+        } else {
+          document.getElementById("tableContainer").innerHTML = "<p>No weekly records found in Total view.</p>";
+        }
+      });
+    }
+    
+    // File upload & parsing (supports CSV and Excel)
+    function uploadData() {
+      const fileInput = document.getElementById("fileInput");
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Please select a file first.");
+        return;
+      }
+      const weekType = document.getElementById("weekType").value;
+      const category = document.getElementById("category").value;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        let fileContent = event.target.result;
+        if(file.name.endsWith(".xlsx")) {
+          const workbook = XLSX.read(fileContent, {type: 'binary'});
+          const firstSheet = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheet];
+          fileContent = XLSX.utils.sheet_to_csv(worksheet);
+        }
+        db.ref("records/" + weekType + "/" + category).set(fileContent)
+          .then(() => {
+            alert("Data uploaded successfully to " + weekType + " (" + category + ")");
+            const timestamp = Date.now();
+            db.ref("records/allWeeks/" + timestamp + "/" + category).set(fileContent);
+          })
+          .catch(error => {
+            console.error("Upload error:", error);
+            alert("Error uploading data: " + error.message);
+          });
+      };
+      if(file.name.endsWith(".xlsx")){
+        reader.readAsBinaryString(file);
+      } else {
+        reader.readAsText(file);
+      }
+    }
+    
+    document.addEventListener("DOMContentLoaded", function(){
+      showMainView(currentWeekType);
+    });
+  </script>
+  
+  <!--
+    Instructions for Use:
+    1. Admin Login: Click "Admin Login" and enter "cricket123" to show the upload section.
+    2. Upload: Choose the week type and category, then upload a CSV/Excel file.
+    3. Weekly View: Navigate using "Last Week's Records" or "This Week's Records". The tables are built dynamically showing all CSV fields.
+       - In batting tables, the top batsman's name gets an orange cap icon.
+       - In bowling tables, the top bowler's name gets a purple cap icon.
+       - Additionally, a leader card overlay shows the top player's image (if mapped) and rotates/fades out.
+    4. Total View: Weekly files are aggregated. For batting and bowling, key stats are summed and recalculated (including extra bowling fields).
+  -->
+</body>
+</html>
