@@ -107,12 +107,7 @@
       th {
         color: #fff;
         font-weight: 700;
-        cursor: pointer;
-        position: relative;
-      }
-      th .sort-btn {
-        font-size: 0.8em;
-        margin-left: 5px;
+        /* Removed sort icon from header */
       }
       tbody tr:nth-child(even) {
         background-color: rgba(249, 249, 249, 0.8);
@@ -177,7 +172,7 @@
         height: 420px;
         background: url("https://i.imgur.com/K0zYkQeb.jpg") no-repeat center center;
         background-size: contain;
-        border-radius: 0 !important; /* No rounded corners */
+        border-radius: 0 !important; /* Removed rounded corners */
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         display: flex;
         flex-direction: column;
@@ -187,12 +182,16 @@
         z-index: 9999;
         opacity: 1;
       }
-      /* Player name below the image in bold */
       .leader-card strong {
         display: block;
         font-family: "Montserrat", sans-serif;
         font-size: 1.3em;
         margin: 5px 0;
+      }
+      .leader-card img.leader-face {
+        width: 70%;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       }
       /* Scores styling below player name */
       .scores p {
@@ -326,7 +325,11 @@
     <div class="admin-section">
       <button onclick="toggleAdminLogin()">Admin Login</button>
       <div id="adminLogin" class="hidden">
-        <input type="password" id="adminPass" placeholder="Enter Admin Password" />
+        <input
+          type="password"
+          id="adminPass"
+          placeholder="Enter Admin Password"
+        />
         <button onclick="checkPassword()">Submit</button>
       </div>
       <div id="adminUpload" class="hidden">
@@ -375,7 +378,7 @@
 
       let currentWeekType = "lastWeek"; // "lastWeek", "thisWeek", or "total"
       let currentCategory = "batting"; // "batting", "bowling", "mvp"
-      let currentTableData = []; // Global store (sort functionality removed)
+      let currentTableData = []; // Global store for sort functionality (unused now)
 
       /* Mapping of player names to image URLs (update with your own URLs) */
       const playerImages = {
@@ -505,6 +508,7 @@
           Average: leader.Average ? parseFloat(leader.Average) : 0,
           Catches: leader.Catches ? parseFloat(leader.Catches) : 0
         };
+
         console.log("Stats for", leader.Batsman || leader.Name, ":", stats);
 
         // Batting Score: 40% Runs, 30% Strike Rate, 30% Batting Average
@@ -548,16 +552,19 @@
       function showLeaderCard(leaderName, category) {
         // No pre-card animations; proceed immediately.
         doConfetti();
+
+        // Use the leader's aggregated stats from currentTableData
         let leader =
           currentTableData && currentTableData.length > 0
             ? currentTableData[0]
             : {};
         let scores = computeUniversalScores(leader);
+
         const imageUrl =
           playerImages[leaderName] || "https://i.imgur.com/0ut0Pbl.png";
         const card = document.createElement("div");
         card.className = "leader-card";
-        // Player card: image, then player's name in bold, then scores
+        // Leader card: player photo, then player's name in bold, then scores
         card.innerHTML = `
           <img class="leader-face" src="${imageUrl}" alt="${leaderName}">
           <strong>${leaderName}</strong>
@@ -590,7 +597,7 @@
         );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
-          // Sortable headers commented out
+          // Removed sort functionality from header
           html += `<th>${header}</th>`;
         });
         html += `</tr></thead><tbody>`;
@@ -626,6 +633,7 @@
         );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
+          // Removed sort functionality from header
           html += `<th>${header}</th>`;
         });
         html += `</tr></thead><tbody>`;
@@ -661,6 +669,7 @@
         );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
+          // Removed sort functionality from header
           html += `<th>${header}</th>`;
         });
         html += `</tr></thead><tbody>`;
@@ -683,19 +692,19 @@
             let data = parseCSV(fileContent);
             if (category === "batting") {
               data = data.map(transformBattingData);
-              // Removed sortBatting call
+              data = sortBatting(data);
               if (data.length > 0) {
                 showLeaderCard(data[0]["Batsman"], "batting");
               }
               renderBattingTable(data);
             } else if (category === "bowling") {
-              // Removed sortBowling call
+              data = sortBowling(data);
               if (data.length > 0) {
                 showLeaderCard(data[0]["Bowler"] || data[0]["bowler"], "bowling");
               }
               renderBowlingTable(data);
             } else if (category === "mvp") {
-              // Removed sortMVP call
+              data = sortMVP(data);
               if (data.length > 0) {
                 showLeaderCard(data[0]["Name"], "mvp");
               }
@@ -727,20 +736,25 @@
                 if (!aggregated[name]) {
                   aggregated[name] = { ...rowT };
                   aggregated[name]["Runs"] = parseFloat(rowT["Runs"]) || 0;
-                  aggregated[name]["Balls Faced"] = parseFloat(rowT["Balls Faced"]) || 0;
+                  aggregated[name]["Balls Faced"] =
+                    parseFloat(rowT["Balls Faced"]) || 0;
                   aggregated[name]["Sixes"] = parseFloat(rowT["Sixes"]) || 0;
                   aggregated[name]["Fours"] = parseFloat(rowT["Fours"]) || 0;
                   aggregated[name]["Singles"] = parseFloat(rowT["Singles"]) || 0;
-                  aggregated[name]["Dismissals"] = parseFloat(rowT["Dismissals"]) || 0;
+                  aggregated[name]["Dismissals"] =
+                    parseFloat(rowT["Dismissals"]) || 0;
                   aggregated[name]["50/100"] = parseFloat(rowT["50/100"]) || 0;
-                  aggregated[name]["Highest Score"] = parseFloat(rowT["Highest Score"]) || 0;
+                  aggregated[name]["Highest Score"] =
+                    parseFloat(rowT["Highest Score"]) || 0;
                 } else {
                   aggregated[name]["Runs"] += parseFloat(rowT["Runs"]) || 0;
-                  aggregated[name]["Balls Faced"] += parseFloat(rowT["Balls Faced"]) || 0;
+                  aggregated[name]["Balls Faced"] +=
+                    parseFloat(rowT["Balls Faced"]) || 0;
                   aggregated[name]["Sixes"] += parseFloat(rowT["Sixes"]) || 0;
                   aggregated[name]["Fours"] += parseFloat(rowT["Fours"]) || 0;
                   aggregated[name]["Singles"] += parseFloat(rowT["Singles"]) || 0;
-                  aggregated[name]["Dismissals"] += parseFloat(rowT["Dismissals"]) || 0;
+                  aggregated[name]["Dismissals"] +=
+                    parseFloat(rowT["Dismissals"]) || 0;
                   aggregated[name]["50/100"] += parseFloat(rowT["50/100"]) || 0;
                   aggregated[name]["Highest Score"] = Math.max(
                     aggregated[name]["Highest Score"],
@@ -761,11 +775,11 @@
                     : "NA";
                 result.push(rec);
               });
-              // Removed sortBatting call
-              if (result.length > 0) {
-                showLeaderCard(result[0]["Batsman"], "batting");
+              const sorted = sortBatting(result);
+              if (sorted.length > 0) {
+                showLeaderCard(sorted[0]["Batsman"], "batting");
               }
-              renderBattingTable(result);
+              renderBattingTable(sorted);
             } else if (category === "bowling") {
               const aggregated = {};
               allData.forEach((row) => {
@@ -820,11 +834,14 @@
                 delete rec["OversBalls"];
                 result.push(rec);
               });
-              // Removed sort call for bowling
-              if (result.length > 0) {
-                showLeaderCard(result[0]["Bowler"], "bowling");
+              const sorted = result.sort(
+                (a, b) =>
+                  parseFloat(b["Wickets"] || 0) - parseFloat(a["Wickets"] || 0)
+              );
+              if (sorted.length > 0) {
+                showLeaderCard(sorted[0]["Bowler"], "bowling");
               }
-              renderBowlingTable(result);
+              renderBowlingTable(sorted);
             } else if (category === "mvp") {
               const aggregated = {};
               allData.forEach((row) => {
@@ -844,11 +861,11 @@
               Object.keys(aggregated).forEach((name) => {
                 result.push(aggregated[name]);
               });
-              // Removed sort call for MVP
-              if (result.length > 0) {
-                showLeaderCard(result[0]["Name"], "mvp");
+              const sorted = sortMVP(result);
+              if (sorted.length > 0) {
+                showLeaderCard(sorted[0]["Name"], "mvp");
               }
-              renderMVPTable(result);
+              renderMVPTable(sorted);
             }
           } else {
             document.getElementById("tableContainer").innerHTML =
@@ -916,12 +933,12 @@
          - EAFC‑style, bigger card showing player's image.
          - Player name is shown below the image in bold.
          - Below the name, the player's scores (Batting, Bowling, Fielding, All-Round) are shown.
-         - Scores are computed out of 100 using a universal scoring system.
+         - Scores are computed out of 100 using a universal scoring system with logging.
       5) Tables:
          - Semi‑transparent background so the stadium shows through.
          - Top 3 rows "pop out" with scale and shadow.
          - "Runs" (batting) and "Wickets" (bowling) columns use a highlighted font.
-         - Sort functionality is removed.
+         - Sort functionality has been removed.
     -->
   </body>
 </html>
