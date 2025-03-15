@@ -389,7 +389,7 @@
       const playerImages = {
         Tavnoor: "",
         Karan: "https://i.imgur.com/HR0t9p0.png",
-        Ritwik: ""
+        Ritwik: "https://i.imgur.com/ynH5zES.png"
         // Add more mappings as needed.
       };
 
@@ -516,11 +516,12 @@
         );
       }
       function sortMVP(data) {
-        return data.sort(
-          (a, b) =>
-            parseFloat(b["MVP Points"] || 0) - parseFloat(a["MVP Points"] || 0)
-        );
-      }
+        return data.sort((a, b) => {
+          let aPoints = parseFloat(a["MVP Points"] || a["mvp points"] || a["Points"] || 0);
+          let bPoints = parseFloat(b["MVP Points"] || b["mvp points"] || b["Points"] || 0);
+          return bPoints - aPoints;
+        });
+}
 
       /* ATTACH SORT LISTENERS AFTER TABLE RENDER */
       function attachSortListeners() {
