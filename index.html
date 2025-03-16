@@ -28,6 +28,7 @@
         padding: 0;
         overflow-x: hidden;
       }
+
       /* HEADER */
       header {
         background-color: rgba(0, 0, 0, 0.7);
@@ -40,6 +41,7 @@
         font-size: 2.5em;
         color: #ffd700;
       }
+
       /* NAVIGATION */
       .nav-main,
       .nav-sub {
@@ -69,18 +71,20 @@
         background-color: #ffd700;
         color: #000;
       }
+
       /* CONTENT AREA */
       .content {
         width: 95%;
         max-width: 1200px;
         margin: 20px auto;
-        background-color: rgba(255, 255, 255, 0.8);
+        background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent */
         color: #333;
         padding: 20px;
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         position: relative;
       }
+
       /* TABLE STYLING (IPL-STYLE) */
       table {
         width: 100%;
@@ -138,6 +142,7 @@
         font-weight: bold;
         color: #d2691e;
       }
+
       /* ADMIN SECTION */
       .admin-section {
         background-color: rgba(0, 0, 0, 0.7);
@@ -155,11 +160,13 @@
       .hidden {
         display: none;
       }
+
       /* CAP ICONS */
       img.cap-icon {
         width: 20px;
         vertical-align: middle;
       }
+
       /* EAFC-STYLE LEADER CARD (BIGGER) */
       .leader-card {
         position: absolute;
@@ -170,7 +177,7 @@
         height: 420px;
         background: url("https://i.imgur.com/K0zYkQeb.jpg") no-repeat center center;
         background-size: cover;
-        border-radius: 0 !important;
+        border-radius: 0 !important; /* Removed rounded corners */
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         display: flex;
         flex-direction: column;
@@ -196,6 +203,7 @@
         margin: 4px 0;
         font-size: 0.9em;
       }
+
       /* ANIMATIONS */
       @keyframes flipAndFade {
         0% {
@@ -210,6 +218,7 @@
       .leader-card.animate {
         animation: flipAndFade 1.5s forwards;
       }
+
       /* BAT/ BALL ANIMATION (Using Emoticons) for batting */
       .bat-animation,
       .ball-animation {
@@ -251,6 +260,7 @@
           opacity: 0;
         }
       }
+
       /* STUMPS/ BALL ANIMATION (Using Emoticons) for bowling */
       .stumps-animation {
         position: absolute;
@@ -320,7 +330,11 @@
     <div class="admin-section">
       <button onclick="toggleAdminLogin()">Admin Login</button>
       <div id="adminLogin" class="hidden">
-        <input type="password" id="adminPass" placeholder="Enter Admin Password" />
+        <input
+          type="password"
+          id="adminPass"
+          placeholder="Enter Admin Password"
+        />
         <button onclick="checkPassword()">Submit</button>
       </div>
       <div id="adminUpload" class="hidden">
@@ -369,11 +383,11 @@
 
       let currentWeekType = "lastWeek"; // "lastWeek", "thisWeek", or "total"
       let currentCategory = "batting"; // "batting", "bowling", "mvp"
-      let currentTableData = []; // Global store
+      let currentTableData = []; // Global store for sort functionality
 
       /* Mapping of player names to image URLs (update with your own URLs) */
       const playerImages = {
-        Tavnoor: "", // For MVP, if no image is provided, it will default to the fallback.
+        Tavnoor: "",
         Karan: "https://i.imgur.com/HR0t9p0.png",
         Ritwik: "https://i.imgur.com/ynH5zES.png"
         // Add more mappings as needed.
@@ -507,9 +521,9 @@
           let bPoints = parseFloat(b["MVP Points"] || b["mvp points"] || b["Points"] || 0);
           return bPoints - aPoints;
         });
-      }
+}
 
-      /* ATTACH SORT LISTENERS AFTER TABLE RENDER (Kept for default sorting in weekly view) */
+      /* ATTACH SORT LISTENERS AFTER TABLE RENDER */
       function attachSortListeners() {
         document.querySelectorAll("th.sortable").forEach((th) => {
             th.addEventListener("click", function () {
@@ -543,6 +557,7 @@
             });
         });
     }
+
 
       /* ANIMATION & CONFETTI FUNCTIONS */
       function doConfetti() {
@@ -613,12 +628,16 @@
         });
       }
 
-      /* UNIVERSAL SCORING FUNCTION FOR BATTING/BOWLING/FIELDING */
+      /* UNIVERSAL SCORING FUNCTION */
       function computeUniversalScores(leader) {
         let stats = {
           Runs: leader.Runs ? parseFloat(leader.Runs) : 0,
-          StrikeRate: leader["Strike Rate"] ? parseFloat(leader["Strike Rate"]) : 0,
-          BattingAverage: leader["Batting Average"] ? parseFloat(leader["Batting Average"]) : 0,
+          StrikeRate: leader["Strike Rate"]
+            ? parseFloat(leader["Strike Rate"])
+            : 0,
+          BattingAverage: leader["Batting Average"]
+            ? parseFloat(leader["Batting Average"])
+            : 0,
           Wickets: leader.Wickets ? parseFloat(leader.Wickets) : 0,
           Economy: leader.Economy ? parseFloat(leader.Economy) : 0,
           Average: leader.Average ? parseFloat(leader.Average) : 0,
@@ -651,31 +670,6 @@
         };
       }
 
-      /* MVP SCORING FUNCTION USING FORMULA:
-         MVP Points = (Wicket * 3.5) + (Dot * 1) + (Four * 2.5) + (Six * 3.5) + (Catch * 2.5) + (Run Out * 1) + (Stumping * 2.5)
-      */
-      function computeMVPPoints(player) {
-        // For each stat, if the field is missing, we default to 0.
-        let wickets = parseFloat(player["Wicket"]) || 0;
-        let dots = parseFloat(player["Dot"]) || 0;
-        let fours = parseFloat(player["Four"]) || 0;
-        let sixes = parseFloat(player["Six"]) || 0;
-        let catches = parseFloat(player["Catches"]) || 0;
-        let runOut = parseFloat(player["Run Out"]) || 0;
-        let stumping = parseFloat(player["Stumping"]) || 0;
-        let mvpPoints =
-          (wickets * 3.5) +
-          (dots * 1) +
-          (fours * 2.5) +
-          (sixes * 3.5) +
-          (catches * 2.5) +
-          (runOut * 1) +
-          (stumping * 2.5);
-        // Store the computed MVP Points back into the player object.
-        player["MVP Points"] = mvpPoints;
-        return mvpPoints;
-      }
-
       /* EAFC-STYLE LEADER CARD WITH SCORING */
       function showLeaderCard(leaderName, category) {
         // Removed pre-card animations; proceed immediately.
@@ -686,40 +680,23 @@
           currentTableData && currentTableData.length > 0
             ? currentTableData[0]
             : {};
-        let scores;
-        if (category === "mvp") {
-          // For MVP, recompute the MVP points using our formula.
-          computeMVPPoints(leader);
-          scores = { mvp: Math.round(parseFloat(leader["MVP Points"])) };
-        } else {
-          scores = computeUniversalScores(leader);
-        }
+        let scores = computeUniversalScores(leader);
 
         const imageUrl =
           playerImages[leaderName] || "https://i.imgur.com/0ut0Pbl.png";
         const card = document.createElement("div");
         card.className = "leader-card";
         // Leader card: player photo, then player's name in bold, then scores
-        if (category === "mvp") {
-          card.innerHTML = `
-            <img class="leader-face" src="${imageUrl}" alt="${leaderName}">
-            <strong>${leaderName}</strong>
-            <div class="scores">
-              <p>MVP Points: ${scores.mvp}</p>
-            </div>
-          `;
-        } else {
-          card.innerHTML = `
-            <img class="leader-face" src="${imageUrl}" alt="${leaderName}">
-            <strong>${leaderName}</strong>
-            <div class="scores">
-              <p>Batting: ${scores.batting}</p>
-              <p>Bowling: ${scores.bowling}</p>
-              <p>Fielding: ${scores.fielding}</p>
-              <p>All-Round: ${scores.allRound}</p>
-            </div>
-          `;
-        }
+        card.innerHTML = `
+          <img class="leader-face" src="${imageUrl}" alt="${leaderName}">
+          <strong>${leaderName}</strong>
+          <div class="scores">
+            <p>Batting: ${scores.batting}</p>
+            <p>Bowling: ${scores.bowling}</p>
+            <p>Fielding: ${scores.fielding}</p>
+            <p>All-Round: ${scores.allRound}</p>
+          </div>
+        `;
         document.body.appendChild(card);
         setTimeout(() => {
           card.classList.add("animate");
@@ -729,28 +706,31 @@
         }, 3500);
       }
 
-      /* RENDERING TABLES (Sort functionality remains for weekly view) */
+      /* RENDERING TABLES WITH SORT BUTTONS */
       function renderBattingTable(data) {
-        currentTableData = data;
+        currentTableData = data; // store globally for sorting
         if (data.length === 0) {
           document.getElementById("tableContainer").innerHTML =
             "<p>No records available</p>";
           return;
         }
-        const headers = Object.keys(data[0]).filter((key) => key.trim() !== "");
+        const headers = Object.keys(data[0]).filter(
+          (key) => key.trim() !== ""
+        );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
-          // Removed sort functionality from header display
-          html += `<th>${header}</th>`;
+          html += `<th class="sortable" data-column="${header}">${header} <span class="sort-btn" data-direction="none">&#x21C5;</span></th>`;
         });
         html += `</tr></thead><tbody>`;
         data.forEach((row, index) => {
           html += `<tr>`;
           headers.forEach((header) => {
             let cellContent = row[header];
+            // Highlight Runs column
             if (header === "Runs") {
               cellContent = `<span class="highlight-column">${cellContent}</span>`;
             }
+            // For top batsman, add orange cap icon
             if (header.toLowerCase() === "batsman" && index === 0) {
               cellContent += ` <img class="cap-icon" src="https://t4.ftcdn.net/jpg/00/65/47/97/240_F_65479706_Q435JgT6L5lRI9DZdSW0xcipgCuXZAFp.jpg" alt="Orange Cap">`;
             }
@@ -770,19 +750,23 @@
             "<p>No records available</p>";
           return;
         }
-        const headers = Object.keys(data[0]).filter((key) => key.trim() !== "");
+        const headers = Object.keys(data[0]).filter(
+          (key) => key.trim() !== ""
+        );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
-          html += `<th>${header}</th>`;
+          html += `<th class="sortable" data-column="${header}">${header} <span class="sort-btn" data-direction="none">&#x21C5;</span></th>`;
         });
         html += `</tr></thead><tbody>`;
         data.forEach((row, index) => {
           html += `<tr>`;
           headers.forEach((header) => {
             let cellContent = row[header];
+            // Highlight Wickets column
             if (header.toLowerCase() === "wickets") {
               cellContent = `<span class="highlight-column">${cellContent}</span>`;
             }
+            // For top bowler, add purple cap icon
             if (header.toLowerCase() === "bowler" && index === 0) {
               cellContent += ` <img class="cap-icon" src="https://t4.ftcdn.net/jpg/12/43/50/17/240_F_1243501749_mKioxoFNY6Wo0vCkNECAXWb5fpk7PKK5.jpg" alt="Purple Cap">`;
             }
@@ -802,10 +786,12 @@
             "<p>No records available</p>";
           return;
         }
-        const headers = Object.keys(data[0]).filter((key) => key.trim() !== "");
+        const headers = Object.keys(data[0]).filter(
+          (key) => key.trim() !== ""
+        );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
-          html += `<th>${header}</th>`;
+          html += `<th class="sortable" data-column="${header}">${header} <span class="sort-btn" data-direction="none">&#x21C5;</span></th>`;
         });
         html += `</tr></thead><tbody>`;
         data.forEach((row) => {
@@ -840,51 +826,11 @@
               }
               renderBowlingTable(data);
             } else if (category === "mvp") {
-              // For MVP, aggregate individual stats and calculate MVP Points using the provided formula.
-              const aggregated = {};
-              data.forEach((row) => {
-                const name = row["Name"];
-                if (!aggregated[name]) {
-                  aggregated[name] = { ...row };
-                  aggregated[name]["Wicket"] = parseFloat(row["Wicket"]) || 0;
-                  aggregated[name]["Dot"] = parseFloat(row["Dot"]) || 0;
-                  aggregated[name]["Four"] = parseFloat(row["Four"]) || 0;
-                  aggregated[name]["Six"] = parseFloat(row["Six"]) || 0;
-                  aggregated[name]["Catches"] = parseFloat(row["Catches"]) || 0;
-                  aggregated[name]["Run Out"] = parseFloat(row["Run Out"]) || 0;
-                  aggregated[name]["Stumping"] = parseFloat(row["Stumping"]) || 0;
-                } else {
-                  aggregated[name]["Wicket"] += parseFloat(row["Wicket"]) || 0;
-                  aggregated[name]["Dot"] += parseFloat(row["Dot"]) || 0;
-                  aggregated[name]["Four"] += parseFloat(row["Four"]) || 0;
-                  aggregated[name]["Six"] += parseFloat(row["Six"]) || 0;
-                  aggregated[name]["Catches"] += parseFloat(row["Catches"]) || 0;
-                  aggregated[name]["Run Out"] += parseFloat(row["Run Out"]) || 0;
-                  aggregated[name]["Stumping"] += parseFloat(row["Stumping"]) || 0;
-                }
-              });
-              // Calculate MVP Points for each player using the formula:
-              // (Wicket * 3.5) + (Dot * 1) + (Four * 2.5) + (Six * 3.5) + (Catches * 2.5) + (Run Out * 1) + (Stumping * 2.5)
-              Object.keys(aggregated).forEach((name) => {
-                const player = aggregated[name];
-                player["MVP Points"] =
-                  (player["Wicket"] * 3.5) +
-                  (player["Dot"] * 1) +
-                  (player["Four"] * 2.5) +
-                  (player["Six"] * 3.5) +
-                  (player["Catches"] * 2.5) +
-                  (player["Run Out"] * 1) +
-                  (player["Stumping"] * 2.5);
-              });
-              const result = [];
-              Object.keys(aggregated).forEach((name) => {
-                result.push(aggregated[name]);
-              });
-              const sorted = sortMVP(result);
-              if (sorted.length > 0) {
-                showLeaderCard(sorted[0]["Name"], "mvp");
+              data = sortMVP(data);
+              if (data.length > 0) {
+                showLeaderCard(data[0]["Name"], "mvp");
               }
-              renderMVPTable(sorted);
+              renderMVPTable(data);
             }
           } else {
             document.getElementById("tableContainer").innerHTML = `<p>No records found for ${weekType} (${category})</p>`;
@@ -912,20 +858,25 @@
                 if (!aggregated[name]) {
                   aggregated[name] = { ...rowT };
                   aggregated[name]["Runs"] = parseFloat(rowT["Runs"]) || 0;
-                  aggregated[name]["Balls Faced"] = parseFloat(rowT["Balls Faced"]) || 0;
+                  aggregated[name]["Balls Faced"] =
+                    parseFloat(rowT["Balls Faced"]) || 0;
                   aggregated[name]["Sixes"] = parseFloat(rowT["Sixes"]) || 0;
                   aggregated[name]["Fours"] = parseFloat(rowT["Fours"]) || 0;
                   aggregated[name]["Singles"] = parseFloat(rowT["Singles"]) || 0;
-                  aggregated[name]["Dismissals"] = parseFloat(rowT["Dismissals"]) || 0;
+                  aggregated[name]["Dismissals"] =
+                    parseFloat(rowT["Dismissals"]) || 0;
                   aggregated[name]["50/100"] = parseFloat(rowT["50/100"]) || 0;
-                  aggregated[name]["Highest Score"] = parseFloat(rowT["Highest Score"]) || 0;
+                  aggregated[name]["Highest Score"] =
+                    parseFloat(rowT["Highest Score"]) || 0;
                 } else {
                   aggregated[name]["Runs"] += parseFloat(rowT["Runs"]) || 0;
-                  aggregated[name]["Balls Faced"] += parseFloat(rowT["Balls Faced"]) || 0;
+                  aggregated[name]["Balls Faced"] +=
+                    parseFloat(rowT["Balls Faced"]) || 0;
                   aggregated[name]["Sixes"] += parseFloat(rowT["Sixes"]) || 0;
                   aggregated[name]["Fours"] += parseFloat(rowT["Fours"]) || 0;
                   aggregated[name]["Singles"] += parseFloat(rowT["Singles"]) || 0;
-                  aggregated[name]["Dismissals"] += parseFloat(rowT["Dismissals"]) || 0;
+                  aggregated[name]["Dismissals"] +=
+                    parseFloat(rowT["Dismissals"]) || 0;
                   aggregated[name]["50/100"] += parseFloat(rowT["50/100"]) || 0;
                   aggregated[name]["Highest Score"] = Math.max(
                     aggregated[name]["Highest Score"],
@@ -960,21 +911,31 @@
                     Bowler: name,
                     Wickets: parseFloat(row["wickets"] || row["Wickets"] || 0),
                     OversBalls: oversToBalls(row["overs"] || row["Overs"] || "0"),
-                    "Runs Conceded": parseFloat(row["runs conceded"] || row["Runs Conceded"] || 0),
-                    "6s Conceded": parseFloat(row["6's conceded"] || row["6s Conceded"] || 0),
-                    "4s Conceded": parseFloat(row["4's conceded"] || row["4s Conceded"] || 0),
-                    "1s Conceded": parseFloat(row["1's conceded"] || row["1s Conceded"] || 0),
+                    "Runs Conceded":
+                      parseFloat(row["runs conceded"] || row["Runs Conceded"] || 0),
+                    "6s Conceded":
+                      parseFloat(row["6's conceded"] || row["6s Conceded"] || 0),
+                    "4s Conceded":
+                      parseFloat(row["4's conceded"] || row["4s Conceded"] || 0),
+                    "1s Conceded":
+                      parseFloat(row["1's conceded"] || row["1s Conceded"] || 0),
                     Dots: parseFloat(row["Dots"] || 0),
                     Maiden: parseFloat(row["Maiden"] || 0),
                     Balls: parseFloat(row["Balls"] || 0)
                   };
                 } else {
-                  aggregated[name]["Wickets"] += parseFloat(row["wickets"] || row["Wickets"] || 0);
-                  aggregated[name]["OversBalls"] += oversToBalls(row["overs"] || row["Overs"] || "0");
-                  aggregated[name]["Runs Conceded"] += parseFloat(row["runs conceded"] || row["Runs Conceded"] || 0);
-                  aggregated[name]["6s Conceded"] += parseFloat(row["6's conceded"] || row["6s Conceded"] || 0);
-                  aggregated[name]["4s Conceded"] += parseFloat(row["4's conceded"] || row["4s Conceded"] || 0);
-                  aggregated[name]["1s Conceded"] += parseFloat(row["1's conceded"] || row["1s Conceded"] || 0);
+                  aggregated[name]["Wickets"] +=
+                    parseFloat(row["wickets"] || row["Wickets"] || 0);
+                  aggregated[name]["OversBalls"] +=
+                    oversToBalls(row["overs"] || row["Overs"] || "0");
+                  aggregated[name]["Runs Conceded"] +=
+                    parseFloat(row["runs conceded"] || row["Runs Conceded"] || 0);
+                  aggregated[name]["6s Conceded"] +=
+                    parseFloat(row["6's conceded"] || row["6s Conceded"] || 0);
+                  aggregated[name]["4s Conceded"] +=
+                    parseFloat(row["4's conceded"] || row["4s Conceded"] || 0);
+                  aggregated[name]["1s Conceded"] +=
+                    parseFloat(row["1's conceded"] || row["1s Conceded"] || 0);
                   aggregated[name]["Dots"] += parseFloat(row["Dots"] || 0);
                   aggregated[name]["Maiden"] += parseFloat(row["Maiden"] || 0);
                   aggregated[name]["Balls"] += parseFloat(row["Balls"] || 0);
@@ -996,50 +957,31 @@
                 result.push(rec);
               });
               const sorted = result.sort(
-                (a, b) => parseFloat(b["Wickets"] || 0) - parseFloat(a["Wickets"] || 0)
+                (a, b) =>
+                  parseFloat(b["Wickets"] || 0) - parseFloat(a["Wickets"] || 0)
               );
               if (sorted.length > 0) {
                 showLeaderCard(sorted[0]["Bowler"], "bowling");
               }
               renderBowlingTable(sorted);
             } else if (category === "mvp") {
-              // MVP aggregation: merge rows by "Name" and calculate MVP Points using the formula:
-              // MVP Points = (Wicket * 3.5) + (Dot * 1) + (Four * 2.5) + (Six * 3.5) + (Catches * 2.5) + (Run Out * 1) + (Stumping * 2.5)
               const aggregated = {};
               allData.forEach((row) => {
                 const name = row["Name"];
                 if (!aggregated[name]) {
                   aggregated[name] = { ...row };
-                  aggregated[name]["Wicket"] = parseFloat(row["Wicket"]) || 0;
-                  aggregated[name]["Dot"] = parseFloat(row["Dot"]) || 0;
-                  aggregated[name]["Four"] = parseFloat(row["Four"]) || 0;
-                  aggregated[name]["Six"] = parseFloat(row["Six"]) || 0;
                   aggregated[name]["Catches"] = parseFloat(row["Catches"]) || 0;
-                  aggregated[name]["Run Out"] = parseFloat(row["Run Out"]) || 0;
-                  aggregated[name]["Stumping"] = parseFloat(row["Stumping"]) || 0;
+                  aggregated[name]["MVP Points"] =
+                    parseFloat(row["MVP Points"]) || 0;
                 } else {
-                  aggregated[name]["Wicket"] += parseFloat(row["Wicket"]) || 0;
-                  aggregated[name]["Dot"] += parseFloat(row["Dot"]) || 0;
-                  aggregated[name]["Four"] += parseFloat(row["Four"]) || 0;
-                  aggregated[name]["Six"] += parseFloat(row["Six"]) || 0;
                   aggregated[name]["Catches"] += parseFloat(row["Catches"]) || 0;
-                  aggregated[name]["Run Out"] += parseFloat(row["Run Out"]) || 0;
-                  aggregated[name]["Stumping"] += parseFloat(row["Stumping"]) || 0;
+                  aggregated[name]["MVP Points"] +=
+                    parseFloat(row["MVP Points"]) || 0;
                 }
               });
               const result = [];
               Object.keys(aggregated).forEach((name) => {
-                const player = aggregated[name];
-                // Compute MVP Points using the provided formula:
-                player["MVP Points"] =
-                  (player["Wicket"] * 3.5) +
-                  (player["Dot"] * 1) +
-                  (player["Four"] * 2.5) +
-                  (player["Six"] * 3.5) +
-                  (player["Catches"] * 2.5) +
-                  (player["Run Out"] * 1) +
-                  (player["Stumping"] * 2.5);
-                result.push(player);
+                result.push(aggregated[name]);
               });
               const sorted = sortMVP(result);
               if (sorted.length > 0) {
@@ -1112,9 +1054,8 @@
       4) Leader Card:
          - EAFC‑style, bigger card showing player's image.
          - Player name is shown below the image in bold.
-         - Below the name, the player's scores are shown.
-         - For MVP, MVP Points are calculated using the formula:
-           (Wicket × 3.5) + (Dot × 1) + (Four × 2.5) + (Six × 3.5) + (Catches × 2.5) + (Run Out × 1) + (Stumping × 2.5)
+         - Below the name, the player's scores (Batting, Bowling, Fielding, All-Round) are shown.
+         - Scores are computed out of 100 using a universal scoring system.
       5) Tables:
          - Semi‑transparent background so the stadium shows through.
          - Top 3 rows "pop out" with scale and shadow.
