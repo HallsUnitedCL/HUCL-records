@@ -28,7 +28,6 @@
         padding: 0;
         overflow-x: hidden;
       }
-
       /* HEADER */
       header {
         background-color: rgba(0, 0, 0, 0.7);
@@ -41,7 +40,6 @@
         font-size: 2.5em;
         color: #ffd700;
       }
-
       /* NAVIGATION */
       .nav-main,
       .nav-sub {
@@ -71,7 +69,6 @@
         background-color: #ffd700;
         color: #000;
       }
-
       /* CONTENT AREA */
       .content {
         width: 95%;
@@ -84,7 +81,6 @@
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         position: relative;
       }
-
       /* TABLE STYLING (IPL-STYLE) */
       table {
         width: 100%;
@@ -142,7 +138,6 @@
         font-weight: bold;
         color: #d2691e;
       }
-
       /* ADMIN SECTION */
       .admin-section {
         background-color: rgba(0, 0, 0, 0.7);
@@ -160,13 +155,11 @@
       .hidden {
         display: none;
       }
-
       /* CAP ICONS */
       img.cap-icon {
         width: 20px;
         vertical-align: middle;
       }
-
       /* EAFC-STYLE LEADER CARD (BIGGER) */
       .leader-card {
         position: absolute;
@@ -203,7 +196,6 @@
         margin: 4px 0;
         font-size: 0.9em;
       }
-
       /* ANIMATIONS */
       @keyframes flipAndFade {
         0% {
@@ -218,7 +210,6 @@
       .leader-card.animate {
         animation: flipAndFade 1.5s forwards;
       }
-
       /* BAT/ BALL ANIMATION (Using Emoticons) for batting */
       .bat-animation,
       .ball-animation {
@@ -260,7 +251,6 @@
           opacity: 0;
         }
       }
-
       /* STUMPS/ BALL ANIMATION (Using Emoticons) for bowling */
       .stumps-animation {
         position: absolute;
@@ -330,11 +320,7 @@
     <div class="admin-section">
       <button onclick="toggleAdminLogin()">Admin Login</button>
       <div id="adminLogin" class="hidden">
-        <input
-          type="password"
-          id="adminPass"
-          placeholder="Enter Admin Password"
-        />
+        <input type="password" id="adminPass" placeholder="Enter Admin Password" />
         <button onclick="checkPassword()">Submit</button>
       </div>
       <div id="adminUpload" class="hidden">
@@ -517,47 +503,46 @@
       }
       function sortMVP(data) {
         return data.sort((a, b) => {
-          let aPoints = parseFloat(a["MVP Points"] || a["mvp points"] || a["Points"] || 0);
-          let bPoints = parseFloat(b["MVP Points"] || b["mvp points"] || b["Points"] || 0);
+          let aPoints = parseFloat(a["Points"] || a["MVP Points"] || 0);
+          let bPoints = parseFloat(b["Points"] || b["MVP Points"] || 0);
           return bPoints - aPoints;
         });
-}
+      }
 
       /* ATTACH SORT LISTENERS AFTER TABLE RENDER */
       function attachSortListeners() {
         document.querySelectorAll("th.sortable").forEach((th) => {
-            th.addEventListener("click", function () {
-                let col = th.getAttribute("data-column");
-                let sortBtn = th.querySelector("span.sort-btn");
-                let direction = sortBtn.getAttribute("data-direction") || "asc";
-                direction = direction === "asc" ? "desc" : "asc";
-                sortBtn.setAttribute("data-direction", direction);
-                currentTableData.sort((a, b) => {
-                    let aVal = a[col] !== undefined ? a[col] : "";
-                    let bVal = b[col] !== undefined ? b[col] : "";
-                    if (!isNaN(aVal) && !isNaN(bVal) && aVal !== "" && bVal !== "") {
-                        aVal = parseFloat(aVal);
-                        bVal = parseFloat(bVal);
-                        return direction === "asc" ? aVal - bVal : bVal - aVal;
-                    } else {
-                        aVal = aVal.toString().toLowerCase();
-                        bVal = bVal.toString().toLowerCase();
-                        if (aVal < bVal) return direction === "asc" ? -1 : 1;
-                        if (aVal > bVal) return direction === "asc" ? 1 : -1;
-                        return 0;
-                    }
-                });
-                if (currentCategory === "batting") {
-                    renderBattingTable(currentTableData);
-                } else if (currentCategory === "bowling") {
-                    renderBowlingTable(currentTableData);
-                } else if (currentCategory === "mvp") {
-                    renderMVPTable(currentTableData);
-                }
+          th.addEventListener("click", function () {
+            let col = th.getAttribute("data-column");
+            let sortBtn = th.querySelector("span.sort-btn");
+            let direction = sortBtn.getAttribute("data-direction") || "asc";
+            direction = direction === "asc" ? "desc" : "asc";
+            sortBtn.setAttribute("data-direction", direction);
+            currentTableData.sort((a, b) => {
+              let aVal = a[col] !== undefined ? a[col] : "";
+              let bVal = b[col] !== undefined ? b[col] : "";
+              if (!isNaN(aVal) && !isNaN(bVal) && aVal !== "" && bVal !== "") {
+                aVal = parseFloat(aVal);
+                bVal = parseFloat(bVal);
+                return direction === "asc" ? aVal - bVal : bVal - aVal;
+              } else {
+                aVal = aVal.toString().toLowerCase();
+                bVal = bVal.toString().toLowerCase();
+                if (aVal < bVal) return direction === "asc" ? -1 : 1;
+                if (aVal > bVal) return direction === "asc" ? 1 : -1;
+                return 0;
+              }
             });
+            if (currentCategory === "batting") {
+              renderBattingTable(currentTableData);
+            } else if (currentCategory === "bowling") {
+              renderBowlingTable(currentTableData);
+            } else if (currentCategory === "mvp") {
+              renderMVPTable(currentTableData);
+            }
+          });
         });
-    }
-
+      }
 
       /* ANIMATION & CONFETTI FUNCTIONS */
       function doConfetti() {
@@ -628,7 +613,7 @@
         });
       }
 
-      /* UNIVERSAL SCORING FUNCTION */
+      /* UNIVERSAL SCORING FUNCTION (for batting, bowling, fielding) */
       function computeUniversalScores(leader) {
         let stats = {
           Runs: leader.Runs ? parseFloat(leader.Runs) : 0,
@@ -672,21 +657,17 @@
 
       /* EAFC-STYLE LEADER CARD WITH SCORING */
       function showLeaderCard(leaderName, category) {
-        // Removed pre-card animations; proceed immediately.
         doConfetti();
-
         // Use the leader's aggregated stats from currentTableData
         let leader =
           currentTableData && currentTableData.length > 0
             ? currentTableData[0]
             : {};
         let scores = computeUniversalScores(leader);
-
         const imageUrl =
           playerImages[leaderName] || "https://i.imgur.com/0ut0Pbl.png";
         const card = document.createElement("div");
         card.className = "leader-card";
-        // Leader card: player photo, then player's name in bold, then scores
         card.innerHTML = `
           <img class="leader-face" src="${imageUrl}" alt="${leaderName}">
           <strong>${leaderName}</strong>
@@ -706,16 +687,16 @@
         }, 3500);
       }
 
-      /* RENDERING TABLES WITH SORT BUTTONS */
+      /* RENDERING TABLES (with sorting, but hiding "50/100" column) */
       function renderBattingTable(data) {
-        currentTableData = data; // store globally for sorting
+        currentTableData = data;
         if (data.length === 0) {
-          document.getElementById("tableContainer").innerHTML =
-            "<p>No records available</p>";
+          document.getElementById("tableContainer").innerHTML = "<p>No records available</p>";
           return;
         }
+        // Filter out "50/100" columns
         const headers = Object.keys(data[0]).filter(
-          (key) => key.trim() !== ""
+          (key) => key.trim() !== "" && key !== "50/100" && key !== "50/100s"
         );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
@@ -726,11 +707,9 @@
           html += `<tr>`;
           headers.forEach((header) => {
             let cellContent = row[header];
-            // Highlight Runs column
             if (header === "Runs") {
               cellContent = `<span class="highlight-column">${cellContent}</span>`;
             }
-            // For top batsman, add orange cap icon
             if (header.toLowerCase() === "batsman" && index === 0) {
               cellContent += ` <img class="cap-icon" src="https://t4.ftcdn.net/jpg/00/65/47/97/240_F_65479706_Q435JgT6L5lRI9DZdSW0xcipgCuXZAFp.jpg" alt="Orange Cap">`;
             }
@@ -746,12 +725,11 @@
       function renderBowlingTable(data) {
         currentTableData = data;
         if (data.length === 0) {
-          document.getElementById("tableContainer").innerHTML =
-            "<p>No records available</p>";
+          document.getElementById("tableContainer").innerHTML = "<p>No records available</p>";
           return;
         }
         const headers = Object.keys(data[0]).filter(
-          (key) => key.trim() !== ""
+          (key) => key.trim() !== "" && key !== "50/100" && key !== "50/100s"
         );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
@@ -762,11 +740,9 @@
           html += `<tr>`;
           headers.forEach((header) => {
             let cellContent = row[header];
-            // Highlight Wickets column
             if (header.toLowerCase() === "wickets") {
               cellContent = `<span class="highlight-column">${cellContent}</span>`;
             }
-            // For top bowler, add purple cap icon
             if (header.toLowerCase() === "bowler" && index === 0) {
               cellContent += ` <img class="cap-icon" src="https://t4.ftcdn.net/jpg/12/43/50/17/240_F_1243501749_mKioxoFNY6Wo0vCkNECAXWb5fpk7PKK5.jpg" alt="Purple Cap">`;
             }
@@ -782,12 +758,11 @@
       function renderMVPTable(data) {
         currentTableData = data;
         if (data.length === 0) {
-          document.getElementById("tableContainer").innerHTML =
-            "<p>No records available</p>";
+          document.getElementById("tableContainer").innerHTML = "<p>No records available</p>";
           return;
         }
         const headers = Object.keys(data[0]).filter(
-          (key) => key.trim() !== ""
+          (key) => key.trim() !== "" && key !== "50/100" && key !== "50/100s"
         );
         let html = `<table><thead><tr>`;
         headers.forEach((header) => {
@@ -858,30 +833,19 @@
                 if (!aggregated[name]) {
                   aggregated[name] = { ...rowT };
                   aggregated[name]["Runs"] = parseFloat(rowT["Runs"]) || 0;
-                  aggregated[name]["Balls Faced"] =
-                    parseFloat(rowT["Balls Faced"]) || 0;
+                  aggregated[name]["Balls Faced"] = parseFloat(rowT["Balls Faced"]) || 0;
                   aggregated[name]["Sixes"] = parseFloat(rowT["Sixes"]) || 0;
                   aggregated[name]["Fours"] = parseFloat(rowT["Fours"]) || 0;
                   aggregated[name]["Singles"] = parseFloat(rowT["Singles"]) || 0;
-                  aggregated[name]["Dismissals"] =
-                    parseFloat(rowT["Dismissals"]) || 0;
-                  aggregated[name]["50/100"] = parseFloat(rowT["50/100"]) || 0;
-                  aggregated[name]["Highest Score"] =
-                    parseFloat(rowT["Highest Score"]) || 0;
+                  aggregated[name]["Dismissals"] = parseFloat(rowT["Dismissals"]) || 0;
+                  // Skip "50/100" column in display
                 } else {
                   aggregated[name]["Runs"] += parseFloat(rowT["Runs"]) || 0;
-                  aggregated[name]["Balls Faced"] +=
-                    parseFloat(rowT["Balls Faced"]) || 0;
+                  aggregated[name]["Balls Faced"] += parseFloat(rowT["Balls Faced"]) || 0;
                   aggregated[name]["Sixes"] += parseFloat(rowT["Sixes"]) || 0;
                   aggregated[name]["Fours"] += parseFloat(rowT["Fours"]) || 0;
                   aggregated[name]["Singles"] += parseFloat(rowT["Singles"]) || 0;
-                  aggregated[name]["Dismissals"] +=
-                    parseFloat(rowT["Dismissals"]) || 0;
-                  aggregated[name]["50/100"] += parseFloat(rowT["50/100"]) || 0;
-                  aggregated[name]["Highest Score"] = Math.max(
-                    aggregated[name]["Highest Score"],
-                    parseFloat(rowT["Highest Score"]) || 0
-                  );
+                  aggregated[name]["Dismissals"] += parseFloat(rowT["Dismissals"]) || 0;
                 }
               });
               const result = [];
@@ -911,31 +875,21 @@
                     Bowler: name,
                     Wickets: parseFloat(row["wickets"] || row["Wickets"] || 0),
                     OversBalls: oversToBalls(row["overs"] || row["Overs"] || "0"),
-                    "Runs Conceded":
-                      parseFloat(row["runs conceded"] || row["Runs Conceded"] || 0),
-                    "6s Conceded":
-                      parseFloat(row["6's conceded"] || row["6s Conceded"] || 0),
-                    "4s Conceded":
-                      parseFloat(row["4's conceded"] || row["4s Conceded"] || 0),
-                    "1s Conceded":
-                      parseFloat(row["1's conceded"] || row["1s Conceded"] || 0),
+                    "Runs Conceded": parseFloat(row["runs conceded"] || row["Runs Conceded"] || 0),
+                    "6s Conceded": parseFloat(row["6's conceded"] || row["6s Conceded"] || 0),
+                    "4s Conceded": parseFloat(row["4's conceded"] || row["4s Conceded"] || 0),
+                    "1s Conceded": parseFloat(row["1's conceded"] || row["1s Conceded"] || 0),
                     Dots: parseFloat(row["Dots"] || 0),
                     Maiden: parseFloat(row["Maiden"] || 0),
                     Balls: parseFloat(row["Balls"] || 0)
                   };
                 } else {
-                  aggregated[name]["Wickets"] +=
-                    parseFloat(row["wickets"] || row["Wickets"] || 0);
-                  aggregated[name]["OversBalls"] +=
-                    oversToBalls(row["overs"] || row["Overs"] || "0");
-                  aggregated[name]["Runs Conceded"] +=
-                    parseFloat(row["runs conceded"] || row["Runs Conceded"] || 0);
-                  aggregated[name]["6s Conceded"] +=
-                    parseFloat(row["6's conceded"] || row["6s Conceded"] || 0);
-                  aggregated[name]["4s Conceded"] +=
-                    parseFloat(row["4's conceded"] || row["4s Conceded"] || 0);
-                  aggregated[name]["1s Conceded"] +=
-                    parseFloat(row["1's conceded"] || row["1s Conceded"] || 0);
+                  aggregated[name]["Wickets"] += parseFloat(row["wickets"] || row["Wickets"] || 0);
+                  aggregated[name]["OversBalls"] += oversToBalls(row["overs"] || row["Overs"] || "0");
+                  aggregated[name]["Runs Conceded"] += parseFloat(row["runs conceded"] || row["Runs Conceded"] || 0);
+                  aggregated[name]["6s Conceded"] += parseFloat(row["6's conceded"] || row["6s Conceded"] || 0);
+                  aggregated[name]["4s Conceded"] += parseFloat(row["4's conceded"] || row["4s Conceded"] || 0);
+                  aggregated[name]["1s Conceded"] += parseFloat(row["1's conceded"] || row["1s Conceded"] || 0);
                   aggregated[name]["Dots"] += parseFloat(row["Dots"] || 0);
                   aggregated[name]["Maiden"] += parseFloat(row["Maiden"] || 0);
                   aggregated[name]["Balls"] += parseFloat(row["Balls"] || 0);
@@ -957,26 +911,26 @@
                 result.push(rec);
               });
               const sorted = result.sort(
-                (a, b) =>
-                  parseFloat(b["Wickets"] || 0) - parseFloat(a["Wickets"] || 0)
+                (a, b) => parseFloat(b["Wickets"] || 0) - parseFloat(a["Wickets"] || 0)
               );
               if (sorted.length > 0) {
                 showLeaderCard(sorted[0]["Bowler"], "bowling");
               }
               renderBowlingTable(sorted);
             } else if (category === "mvp") {
+              // For MVP totals, we simply add up "Catches" and "Points" (from weekly files)
               const aggregated = {};
               allData.forEach((row) => {
                 const name = row["Name"];
                 let catches = parseFloat((row["Catches"] || "0").trim()) || 0;
-                let points = parseFloat((row["MVP Points"] || "0").trim()) || 0;
+                let points = parseFloat((row["Points"] || row["MVP Points"] || "0").trim()) || 0;
                 if (!aggregated[name]) {
                   aggregated[name] = { ...row };
                   aggregated[name]["Catches"] = catches;
-                  aggregated[name]["MVP Points"] = points;
+                  aggregated[name]["Points"] = points;
                 } else {
                   aggregated[name]["Catches"] += catches;
-                  aggregated[name]["MVP Points"] += points;
+                  aggregated[name]["Points"] += points;
                 }
               });
               const result = [];
@@ -989,7 +943,6 @@
               }
               renderMVPTable(sorted);
             }
-
           } else {
             document.getElementById("tableContainer").innerHTML =
               "<p>No weekly records found in Total view.</p>";
@@ -1056,12 +1009,12 @@
          - EAFC‑style, bigger card showing player's image.
          - Player name is shown below the image in bold.
          - Below the name, the player's scores (Batting, Bowling, Fielding, All-Round) are shown.
-         - Scores are computed out of 100 using a universal scoring system.
+         - For MVP, the Points are aggregated from weekly data.
       5) Tables:
          - Semi‑transparent background so the stadium shows through.
          - Top 3 rows "pop out" with scale and shadow.
          - "Runs" (batting) and "Wickets" (bowling) columns use a highlighted font.
-         - Each header is sortable via a click on the sort icon.
+         - The "50/100" column is hidden in all tabs.
     -->
   </body>
 </html>
