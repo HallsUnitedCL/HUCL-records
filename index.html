@@ -968,15 +968,15 @@
               const aggregated = {};
               allData.forEach((row) => {
                 const name = row["Name"];
+                let catches = parseFloat((row["Catches"] || "0").trim()) || 0;
+                let points = parseFloat((row["MVP Points"] || "0").trim()) || 0;
                 if (!aggregated[name]) {
                   aggregated[name] = { ...row };
-                  aggregated[name]["Catches"] = parseFloat(row["Catches"]) || 0;
-                  aggregated[name]["MVP Points"] =
-                    parseFloat(row["MVP Points"]) || 0;
+                  aggregated[name]["Catches"] = catches;
+                  aggregated[name]["MVP Points"] = points;
                 } else {
-                  aggregated[name]["Catches"] += parseFloat(row["Catches"]) || 0;
-                  aggregated[name]["MVP Points"] +=
-                    parseFloat(row["MVP Points"]) || 0;
+                  aggregated[name]["Catches"] += catches;
+                  aggregated[name]["MVP Points"] += points;
                 }
               });
               const result = [];
@@ -989,6 +989,7 @@
               }
               renderMVPTable(sorted);
             }
+
           } else {
             document.getElementById("tableContainer").innerHTML =
               "<p>No weekly records found in Total view.</p>";
